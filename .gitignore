@@ -386,4 +386,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
-appsettings.Development.json
+MetaBoyTipBot/appsettings.Development.json
