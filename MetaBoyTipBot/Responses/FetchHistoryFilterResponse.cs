@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace MetaBoyTipBot.Responses
 {
-    public class FetchHistoryResponse
+    public class FetchHistoryFilterResponse
     {
         [JsonProperty("id")]
         public int Id { get; set; }
@@ -73,6 +73,9 @@ namespace MetaBoyTipBot.Responses
 
         [JsonProperty("delegateHash")]
         public string DelegateHash { get; set; }
+
+        [JsonIgnore]
+        public double RealValue => Value * 0.000001;
     }
 
     public class DelegateInfo

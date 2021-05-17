@@ -1,5 +1,9 @@
 ﻿using System;
+using MetaBoyTipBot.Configuration;
+using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.Services;
+using MetaBoyTipBot.Services.Conversation;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Telegram.Bot.Types;
@@ -17,8 +21,13 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var serviceProviderMock = new Mock<IServiceProvider>();
             var botServiceMock = new Mock<IBotService>();
             var tipServiceMock = new Mock<ITipService>();
-            serviceProviderMock.Setup(x => x.GetService(typeof(CallbackMessageService))).Returns(new CallbackMessageService(botServiceMock.Object));
-            serviceProviderMock.Setup(x => x.GetService(typeof(PrivateMessageService))).Returns(new PrivateMessageService(botServiceMock.Object));
+            var botConfigurationMock = new Mock<IOptions<BotConfiguration>>();
+            var walletUserRepositoryMock = new Mock<IWalletUserRepository>();
+            var balanceServiceMock = new Mock<IBalanceService>();
+            var topUpServiceMock = new Mock<ITopUpService>();
+
+            serviceProviderMock.Setup(x => x.GetService(typeof(CallbackMessageService))).Returns(new CallbackMessageService(balanceServiceMock.Object, topUpServiceMock.Object));
+            serviceProviderMock.Setup(x => x.GetService(typeof(PrivateMessageService))).Returns(new PrivateMessageService(botConfigurationMock.Object, botServiceMock.Object, walletUserRepositoryMock.Object));
             serviceProviderMock.Setup(x => x.GetService(typeof(GroupMessageService))).Returns(new GroupMessageService(botServiceMock.Object, tipServiceMock.Object));
             _sut = new MessageFactory(serviceProviderMock.Object);
         }

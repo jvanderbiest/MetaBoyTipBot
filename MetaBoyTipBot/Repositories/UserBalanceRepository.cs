@@ -8,8 +8,8 @@ namespace MetaBoyTipBot.Repositories
 {
     public class UserBalanceRepository : IUserBalanceRepository
     {
-        private const string TableName = AzureTableConstants.Balance.TableName;
-        private const string PartitionKey = AzureTableConstants.Balance.PartitionKeyName;
+        private const string TableName = AzureTableConstants.UserBalance.TableName;
+        private const string PartitionKey = AzureTableConstants.UserBalance.PartitionKeyName;
 
         private readonly ITableStorageService _tableStorageService;
 
@@ -23,21 +23,21 @@ namespace MetaBoyTipBot.Repositories
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public async Task<UserBalanceEntity> Get(string userId)
+        public async Task<UserBalance> Get(int userId)
         {
-            var userBalanceEntity = await _tableStorageService.Retrieve<UserBalanceEntity>(TableName, PartitionKey, userId);
-            return userBalanceEntity ?? new UserBalanceEntity(userId);
+            var userBalanceEntity = await _tableStorageService.Retrieve<UserBalance>(TableName, PartitionKey, userId.ToString());
+            return userBalanceEntity ?? new UserBalance(userId);
         }
 
-        public async Task Update(UserBalanceEntity userBalanceEntity)
+        public async Task Update(UserBalance userBalance)
         {
-            await _tableStorageService.InsertOrMergeEntity(TableName, userBalanceEntity);
+            await _tableStorageService.InsertOrMergeEntity(TableName, userBalance);
         }
     }
 
     public interface IUserBalanceRepository
     {
-        Task<UserBalanceEntity> Get(string userId);
-        Task Update(UserBalanceEntity userBalanceEntity);
+        Task<UserBalance> Get(int userId);
+        Task Update(UserBalance userBalance);
     }
 }

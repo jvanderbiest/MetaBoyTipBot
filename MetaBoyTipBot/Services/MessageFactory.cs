@@ -1,5 +1,6 @@
 ﻿using System;
 using MetaBoyTipBot.Extensions;
+using MetaBoyTipBot.Services.Conversation;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 

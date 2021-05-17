@@ -2,12 +2,12 @@
 
 namespace MetaBoyTipBot.Requests.Torrent
 {
-    public class QueryHistoryRequest
+    public class QueryHistoryFilterRequest
     {
         [JsonProperty("address")]
         public string Address { get; set; }
 
-        [JsonProperty("countTx")]
+        [JsonProperty("countTxs")]
         public int CountTx { get; set; }
 
         [JsonProperty("beginTx")]

@@ -4,7 +4,7 @@ using MetaBoyTipBot.Extensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace MetaBoyTipBot.Services
+namespace MetaBoyTipBot.Services.Conversation
 {
     public class GroupMessageService : IMessageService
     {

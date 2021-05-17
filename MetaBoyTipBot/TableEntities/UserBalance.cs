@@ -3,21 +3,21 @@ using Microsoft.Azure.Cosmos.Table;
 
 namespace MetaBoyTipBot.TableEntities
 {
-    public class UserBalanceEntity : TableEntity
+    public class UserBalance : TableEntity
     {
         private int _defaultTipAmount;
 
-        public UserBalanceEntity()
+        public UserBalance()
         {
         }
 
-        public UserBalanceEntity(string userId)
+        public UserBalance(int userId)
         {
-            PartitionKey = AzureTableConstants.Balance.PartitionKeyName;
-            RowKey = userId;
+            PartitionKey = AzureTableConstants.UserBalance.PartitionKeyName;
+            RowKey = userId.ToString();
         }
 
-        public int Balance { get; set; }
+        public double Balance { get; set; }
         public string Address { get; set; }
 
         /// <summary>

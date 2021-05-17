@@ -3,16 +3,19 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MetaBoyTipBot.Repositories;
+using MetaBoyTipBot.TableEntities;
 
 namespace MetaBoyTipBot.Services
 {
     public class TipService : ITipService
     {
         private readonly IUserBalanceRepository _userBalanceRepository;
+        private readonly IUserBalanceHistoryRepository _userBalanceHistoryRepository;
 
-        public TipService(IUserBalanceRepository userBalanceRepository)
+        public TipService(IUserBalanceRepository userBalanceRepository, IUserBalanceHistoryRepository userBalanceHistoryRepository)
         {
             _userBalanceRepository = userBalanceRepository ?? throw new ArgumentNullException(nameof(userBalanceRepository));
+            _userBalanceHistoryRepository = userBalanceHistoryRepository ?? throw new ArgumentNullException(nameof(userBalanceHistoryRepository));
         }
 
         public int GetTipDefault()
@@ -46,7 +49,7 @@ namespace MetaBoyTipBot.Services
         /// <returns>The amount that was tipped which includes the user tip default multiplier</returns>
         private async Task<int> SettleTip(int amount, int senderUserId, int receiverUserId)
         {
-            var senderProfile = await _userBalanceRepository.Get(senderUserId.ToString());
+            var senderProfile = await _userBalanceRepository.Get(senderUserId);
             var totalAmount = senderProfile.DefaultTipAmount * amount;
 
             if (senderProfile.Balance < totalAmount)
@@ -54,13 +57,15 @@ namespace MetaBoyTipBot.Services
                 return 0;
             }
 
-            var receiverProfile = await _userBalanceRepository.Get(receiverUserId.ToString());
+            var receiverProfile = await _userBalanceRepository.Get(receiverUserId);
             senderProfile.Balance -= totalAmount;
             receiverProfile.Balance += totalAmount;
 
             await _userBalanceRepository.Update(senderProfile);
             await _userBalanceRepository.Update(receiverProfile);
 
+            await _userBalanceHistoryRepository.Update(new UserBalanceHistory(senderUserId, DateTime.UtcNow.Ticks) { Out = totalAmount, ToUserId = senderUserId });
+            await _userBalanceHistoryRepository.Update(new UserBalanceHistory(receiverUserId, DateTime.UtcNow.Ticks) { In = totalAmount, FromUserId = senderUserId });
             return totalAmount;
         }
 

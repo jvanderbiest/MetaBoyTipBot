@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MetaBoyTipBot.Configuration;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Azure.Cosmos.Table.Queryable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -23,6 +26,27 @@ namespace MetaBoyTipBot.Services
             var table = GetCloudTable(tableName);
             await table.CreateIfNotExistsAsync();
             return table;
+        }
+
+        public async Task DeleteTableAsync(string tableName)
+        {
+            var table = GetCloudTable(tableName);
+            await table.DeleteIfExistsAsync();
+        }
+
+        public async Task Delete<T>(string tableName, T entity) where T : ITableEntity
+        {
+            try
+            {
+                var cloudTable = GetCloudTable(tableName);
+                TableOperation deleteOperation = TableOperation.Delete(entity);
+                await cloudTable.ExecuteAsync(deleteOperation);
+            }
+            catch (StorageException e)
+            {
+                _logger.LogError(e.ToString());
+                throw;
+            }
         }
 
         private CloudTable GetCloudTable(string tableName)
@@ -93,6 +117,62 @@ namespace MetaBoyTipBot.Services
                 TableOperation retrieveOperation = TableOperation.Retrieve<T>(partitionKey, rowKey);
                 TableResult result = await cloudTable.ExecuteAsync(retrieveOperation);
                 return (T)result.Result;
+            }
+            catch (StorageException e)
+            {
+                _logger.LogError(e.ToString());
+                throw;
+            }
+        }
+
+        public T RetrieveFirst<T>(string tableName, string partitionKey) where T : ITableEntity, new()
+        {
+            try
+            {
+                var cloudTable = GetCloudTable(tableName);
+                var tableQuery = new TableQuery<T>().Take(1).AsTableQuery();
+                var result = cloudTable.ExecuteQuery(tableQuery).FirstOrDefault();
+                return result;
+            }
+            catch (StorageException e)
+            {
+                _logger.LogError(e.ToString());
+                throw;
+            }
+        }
+
+        public IEnumerable<T> RetrieveByPartitionKey<T>(string tableName, string partitionKey) where T : ITableEntity, new()
+        {
+            try
+            {
+                var cloudTable = GetCloudTable(tableName);
+
+                string partitionFilter = TableQuery.GenerateFilterCondition("PartitionKey",
+                    QueryComparisons.Equal, partitionKey);
+
+                var query = new TableQuery<T> { FilterString = partitionFilter };
+                var result = cloudTable.ExecuteQuery(query);
+                return result;
+            }
+            catch (StorageException e)
+            {
+                _logger.LogError(e.ToString());
+                throw;
+            }
+        }
+
+        public IEnumerable<T> RetrieveByRowKey<T>(string tableName, string rowKey) where T : ITableEntity, new()
+        {
+            try
+            {
+                var cloudTable = GetCloudTable(tableName);
+
+                string partitionFilter = TableQuery.GenerateFilterCondition("RowKey",
+                    QueryComparisons.Equal, rowKey);
+
+                var query = new TableQuery<T> { FilterString = partitionFilter };
+                var result = cloudTable.ExecuteQuery(query);
+                return result;
             }
             catch (StorageException e)
             {

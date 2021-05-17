@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using MetaBoyTipBot.Services;
+using MetaBoyTipBot.Services.Conversation;
 using Moq;
 using NUnit.Framework;
 using RichardSzalay.MockHttp;

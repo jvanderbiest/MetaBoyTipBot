@@ -22,11 +22,11 @@ namespace MetaBoyTipBot.Tests.Unit.Repositories
         [Test]
         public async Task GetShouldReturnNewUserBalanceEntityIfNotExists()
         {
-            var userId = "123";
+            var userId = 123;
             var userBalanceEntity = await _sut.Get(userId);
 
             Assert.NotNull(userBalanceEntity);
-            Assert.AreEqual(userId, userBalanceEntity.RowKey);
+            Assert.AreEqual(userId.ToString(), userBalanceEntity.RowKey);
         }
     }
 }

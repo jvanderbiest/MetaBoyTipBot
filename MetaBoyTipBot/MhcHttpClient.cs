@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using MetaBoyTipBot.Constants;
 using MetaBoyTipBot.Requests.Torrent;
 using MetaBoyTipBot.Responses;
 using Newtonsoft.Json;
@@ -21,38 +21,19 @@ namespace MetaBoyTipBot
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public async Task<FetchHistoryResponse> Validate(string walletAddress)
+
+        public async Task<FetchHistoryFilterResponse> FetchHistory(string walletAddress)
         {
-            var validateRequest = new ValidateRequest
-            {
-                Address = walletAddress
-            };
-
-            var torrentRequest = new TorrentRequest { Params = validateRequest, Method = "validate" };
-            var responseJson = await QueryTorrent(torrentRequest);
-            var fetchHistoryResponse = JsonConvert.DeserializeObject<FetchHistoryResponse>(responseJson);
-            return fetchHistoryResponse;
-        }
-
-        public async Task<FetchHistoryResponse> FetchHistory(string walletAddress, int? countTx, int beginTx = 0)
-        {
-            if (countTx > MhcConstants.HistoryLimit)
-            {
-                throw new Exception($"Too many transactions, max transactions: {MhcConstants.HistoryLimit}");
-            }
-
-            countTx ??= MhcConstants.HistoryLimit;
-
-            var queryTorrentRequest = new QueryHistoryRequest
+            var queryTorrentRequest = new QueryHistoryFilterRequest
             {
                 Address = walletAddress,
-                CountTx = countTx.Value,
-                BeginTx = beginTx
+                CountTx = 999,
+                BeginTx = 0
             };
 
             var torrentRequest = new TorrentRequest { Params = queryTorrentRequest, Method = "fetch-history" };
             var responseJson = await QueryTorrent(torrentRequest);
-            var fetchHistoryResponse = JsonConvert.DeserializeObject<FetchHistoryResponse>(responseJson);
+            var fetchHistoryResponse = JsonConvert.DeserializeObject<FetchHistoryFilterResponse>(responseJson);
             return fetchHistoryResponse;
         }
 
@@ -84,12 +65,5 @@ namespace MetaBoyTipBot
                 }
             }
         }
-    }
-
-    public interface IMhcHttpClient
-    {
-        Task<FetchHistoryResponse?> FetchHistory(string walletAddress, int? countTx, int beginTx = 0);
-        Task<FetchBalanceResponse?> FetchBalance(string walletAddress);
-        Task<FetchHistoryResponse> Validate(string walletAddress);
     }
 }

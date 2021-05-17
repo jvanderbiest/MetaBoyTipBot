@@ -12,12 +12,14 @@ namespace MetaBoyTipBot.Tests.Unit.Services
     {
         private TipService _sut;
         private Mock<IUserBalanceRepository> _userBalanceRepository;
+        private Mock<IUserBalanceHistoryRepository> _userBalanceHistoryRepository;
 
         [SetUp]
         public void BeforeEachTest()
         {
             _userBalanceRepository = new Mock<IUserBalanceRepository>();
-            _sut = new TipService(_userBalanceRepository.Object);
+            _userBalanceHistoryRepository = new Mock<IUserBalanceHistoryRepository>();
+            _sut = new TipService(_userBalanceRepository.Object, _userBalanceHistoryRepository.Object);
         }
 
         /// <summary>
@@ -50,8 +52,8 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var senderUserId = 1111;
             var receiverUserId = 9999;
 
-            _userBalanceRepository.Setup(x => x.Get(senderUserId.ToString())).ReturnsAsync(new UserBalanceEntity { Balance = 1000 });
-            _userBalanceRepository.Setup(x => x.Get(receiverUserId.ToString())).ReturnsAsync(new UserBalanceEntity());
+            _userBalanceRepository.Setup(x => x.Get(senderUserId)).ReturnsAsync(new UserBalance { Balance = 1000 });
+            _userBalanceRepository.Setup(x => x.Get(receiverUserId)).ReturnsAsync(new UserBalance());
 
             var amount = await _sut.TryTip(text, senderUserId, receiverUserId);
             Assert.AreEqual(tipAmount, amount);
@@ -63,11 +65,11 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var senderUserId = 1111;
             var receiverUserId = 9999;
 
-            var senderBalance = new UserBalanceEntity { Balance = 1 };
-            var receiverBalance = new UserBalanceEntity();
+            var senderBalance = new UserBalance { Balance = 1 };
+            var receiverBalance = new UserBalance();
 
-            _userBalanceRepository.Setup(x => x.Get(senderUserId.ToString())).ReturnsAsync(senderBalance);
-            _userBalanceRepository.Setup(x => x.Get(receiverUserId.ToString())).ReturnsAsync(receiverBalance);
+            _userBalanceRepository.Setup(x => x.Get(senderUserId)).ReturnsAsync(senderBalance);
+            _userBalanceRepository.Setup(x => x.Get(receiverUserId)).ReturnsAsync(receiverBalance);
 
             var amount = await _sut.TryTip(text, senderUserId, receiverUserId);
             Assert.AreEqual(tipAmount, amount);
@@ -84,11 +86,11 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var senderUserId = 1111;
             var receiverUserId = 9999;
 
-            var senderBalance = new UserBalanceEntity { Balance = 20, DefaultTipAmount = 10 };
-            var receiverBalance = new UserBalanceEntity();
+            var senderBalance = new UserBalance { Balance = 20, DefaultTipAmount = 10 };
+            var receiverBalance = new UserBalance();
 
-            _userBalanceRepository.Setup(x => x.Get(senderUserId.ToString())).ReturnsAsync(senderBalance);
-            _userBalanceRepository.Setup(x => x.Get(receiverUserId.ToString())).ReturnsAsync(receiverBalance);
+            _userBalanceRepository.Setup(x => x.Get(senderUserId)).ReturnsAsync(senderBalance);
+            _userBalanceRepository.Setup(x => x.Get(receiverUserId)).ReturnsAsync(receiverBalance);
 
             var amount = await _sut.TryTip(text, senderUserId, receiverUserId);
             Assert.AreEqual(tipAmount * 2, amount);

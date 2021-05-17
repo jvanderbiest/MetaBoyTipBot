@@ -5,8 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using MetaBoyTipBot.Configuration;
+using MetaBoyTipBot.Extensions;
+using MetaBoyTipBot.Jobs;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.Services;
+using MetaBoyTipBot.Services.Conversation;
+using Quartz;
 
 namespace MetaBoyTipBot
 {
@@ -23,13 +27,25 @@ namespace MetaBoyTipBot
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<BotConfiguration>(Configuration.GetSection("BotConfiguration"));
+            services.AddHttpClient();
 
             services.AddTransient<IMessageFactory, MessageFactory>();
 
             services.AddScoped<IUpdateService, UpdateService>();
             services.AddScoped<ITipService, TipService>();
             services.AddScoped<ITableStorageService, TableStorageService>();
+            services.AddScoped<IBalanceService, BalanceService>();
+            services.AddScoped<ITopUpService, TopUpService>();
+            services.AddScoped<ITransactionHandlerService, TransactionHandlerService>();
 
+            services.AddScoped<ITransactionHistoryRepository, TransactionHistoryRepository>();
+            services.AddScoped<IUserBalanceRepository, UserBalanceRepository>();
+            services.AddScoped<IWalletUserRepository, WalletUserRepository>();
+            services.AddScoped<ITransactionCheckHistoryRepository, TransactionCheckHistoryRepository>();
+            services.AddScoped<IUserBalanceHistoryRepository, UserBalanceHistoryRepository>();
+            
+            services.AddScoped<IMhcHttpClient, MhcHttpClient>();
+            
             services.AddScoped<PrivateMessageService>()
                 .AddScoped<IMessageService, PrivateMessageService>(s => s.GetService<PrivateMessageService>());
             services.AddScoped<GroupMessageService>()
@@ -40,6 +56,17 @@ namespace MetaBoyTipBot
             services.AddSingleton<IBotService, BotService>();
 
             services.AddScoped<IUserBalanceRepository, UserBalanceRepository>();
+
+            services.AddQuartz(q =>
+            {
+                q.UseMicrosoftDependencyInjectionScopedJobFactory();
+                q.AddJobAndTrigger<TransactionSyncJob>(Configuration);
+            });
+
+            services.AddQuartzServer(options =>
+            {
+                options.WaitForJobsToComplete = true;
+            });
 
             services.AddControllers().AddNewtonsoftJson();
             services.AddSwaggerGen(c =>
