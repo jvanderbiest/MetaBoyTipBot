@@ -91,13 +91,13 @@ namespace MetaBoyTipBot.Tests.Integration
             var walletUser2 = new WalletUser(partitionKey2, rowKey2);
             await _sut.InsertOrMergeEntity(tableName, walletUser2);
 
-            var firstRecord = _sut.RetrieveByRowKey<WalletUser>(tableName, partitionKey).ToList();
+            var firstRecord = _sut.RetrieveByPartitionKey<WalletUser>(tableName, partitionKey).ToList();
             Assert.NotNull(firstRecord);
             Assert.AreEqual(1, firstRecord.Count);
             Assert.AreEqual(partitionKey, firstRecord.First().PartitionKey);
             Assert.AreEqual(rowKey.ToString(), firstRecord.First().RowKey);
 
-            var secondRecord = _sut.RetrieveByRowKey<WalletUser>(tableName, partitionKey2).ToList();
+            var secondRecord = _sut.RetrieveByPartitionKey<WalletUser>(tableName, partitionKey2).ToList();
             Assert.NotNull(secondRecord);
             Assert.AreEqual(1, secondRecord.Count);
             Assert.AreEqual(partitionKey2, secondRecord.First().PartitionKey);

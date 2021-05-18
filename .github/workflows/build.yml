@@ -1,6 +1,6 @@
-name: dotnet package
+name: Build
 
-on: [push]
+on: [push, "pull_request"]
 
 jobs:
   build:
@@ -18,7 +18,14 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Install dependencies
         run: dotnet restore
+      - name: Install tool dependencies
+        run: dotnet tool restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
-        run: dotnet test --filter FullyQualifiedName\!~IntegrationTests --no-restore --verbosity normal
+        run: dotnet test --filter FullyQualifiedName\!~Integration --no-restore --verbosity normal /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+      - name: Publish coverage report to coveralls.io   
+        uses: coverallsapp/github-action@master   
+        with:
+        github-token: ${{ secrets.GITHUB_TOKEN }} 
+        path-to-lcov: MetaBoyTipBot/MetaBoyTipBot.Tests/TestResults/coverage.info 

@@ -50,12 +50,12 @@ namespace MetaBoyTipBot.Tests.Unit.Services
         [Test]
         public async Task ShouldNotImportIfAlreadyTransactionHistory()
         {
-            var walletAddress = "0x002d0dd81812c0e4072a284e0b03dbf7d5d242ac70de0a916a";
-            _botConfiguration.TipWalletAddress = walletAddress;
+            var walletAddress = "0x0070ea89e1d6e36847675511b03951f970763f57c554030171";
+            _botConfiguration.TipWalletAddress = "0x002d0dd81812c0e4072a284e0b03dbf7d5d242ac70de0a916a";
             var responseJson = ReadSampleFile("Transactions1.json");
             var fetchHistoryResponse = JsonConvert.DeserializeObject<FetchHistoryFilterResponse>(responseJson);
 
-            _mhcHttpClientMock.Setup(x => x.FetchHistory(walletAddress)).ReturnsAsync(fetchHistoryResponse);
+            _mhcHttpClientMock.Setup(x => x.FetchHistory(_botConfiguration.TipWalletAddress)).ReturnsAsync(fetchHistoryResponse);
             _transactionHistoryRepositoryMock.Setup(x => x.Get(walletAddress, It.IsAny<int>())).ReturnsAsync(new TransactionHistory(walletAddress, 123));
 
             await _sut.ImportTransactions(DateTime.Parse("2021/05/15 12:13:18"));
@@ -86,15 +86,15 @@ namespace MetaBoyTipBot.Tests.Unit.Services
         [Test]
         public async Task ShouldImport1Transaction()
         {
-            var walletAddress = "0x002d0dd81812c0e4072a284e0b03dbf7d5d242ac70de0a916a";
-            _botConfiguration.TipWalletAddress = walletAddress;
+            var walletAddress = "0x0070ea89e1d6e36847675511b03951f970763f57c554030171";
+            _botConfiguration.TipWalletAddress = "0x002d0dd81812c0e4072a284e0b03dbf7d5d242ac70de0a916a";
             var responseJson = ReadSampleFile("Transactions1.json");
             var fetchHistoryResponse = JsonConvert.DeserializeObject<FetchHistoryFilterResponse>(responseJson);
             var userId = 1234;
             var userBalance = 10.5;
-            var walletUser = new WalletUser { RowKey = userId.ToString() };
+            var walletUser = new WalletUser { PartitionKey = walletAddress, RowKey = userId.ToString() };
 
-            _mhcHttpClientMock.Setup(x => x.FetchHistory(walletAddress)).ReturnsAsync(fetchHistoryResponse);
+            _mhcHttpClientMock.Setup(x => x.FetchHistory(_botConfiguration.TipWalletAddress)).ReturnsAsync(fetchHistoryResponse);
             _walletUserRepositoryMock.Setup(x => x.GetByWalletId(walletAddress)).Returns(walletUser);
             _userBalanceRepositoryMock.Setup(x => x.Get(userId)).ReturnsAsync(new UserBalance(userId) { Balance = userBalance });
 
