@@ -18,8 +18,6 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Install dependencies
         run: dotnet restore
-      - name: Install tool dependencies
-        run: dotnet tool restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
@@ -27,5 +25,5 @@ jobs:
       - name: Publish coverage report to coveralls.io   
         uses: coverallsapp/github-action@master   
         with:
-        github-token: ${{ secrets.GITHUB_TOKEN }} 
-        path-to-lcov: MetaBoyTipBot/MetaBoyTipBot.Tests/TestResults/coverage.info 
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          path-to-lcov: MetaBoyTipBot/MetaBoyTipBot.Tests/TestResults/coverage.info 
