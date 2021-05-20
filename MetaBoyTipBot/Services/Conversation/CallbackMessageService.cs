@@ -13,24 +13,45 @@ namespace MetaBoyTipBot.Services.Conversation
     {
         private readonly IBalanceService _balanceService;
         private readonly ITopUpService _topUpService;
+        private readonly IWithdrawalService _withdrawalService;
+        private readonly ISettingsService _settingsService;
 
-        public CallbackMessageService(IBalanceService balanceService, ITopUpService topUpService)
+        public CallbackMessageService(IBalanceService balanceService, ITopUpService topUpService, IWithdrawalService withdrawalService, ISettingsService settingsService)
         {
             _balanceService = balanceService ?? throw new ArgumentNullException(nameof(balanceService));
             _topUpService = topUpService ?? throw new ArgumentNullException(nameof(topUpService));
+            _withdrawalService = withdrawalService ?? throw new ArgumentNullException(nameof(withdrawalService));
+            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         }
 
         public async Task Handle(Update update)
         {
-            if (update.CallbackQuery.Data == CallBackConstants.TopUp)
+            switch (update.CallbackQuery.Data)
             {
-                await _topUpService.Handle(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
-            }
+                case CallBackConstants.TopUp:
+                    await _topUpService.Handle(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
+                    break;
+                case CallBackConstants.Balance:
+                    await _balanceService.Handle(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
+                    break;
+                case CallBackConstants.WithDraw:
+                    // todo
+                    // if no user wallet prompt for user wallet
+                    
+                    // prompt for amount
 
-            else if (update.CallbackQuery.Data == CallBackConstants.Balance)
-            {
-                await _balanceService.Handle(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
+                    break;
+                case CallBackConstants.Settings:
+                    await _settingsService.ShowSettingsMenu(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
+                    break;
+                case CallBackConstants.SettingsDefaultTipAmount:
+                    await _settingsService.HandleDefaultTipAmountPrompt(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
+                    break;
+                case CallBackConstants.SettingsChangeWalletAddress:
+                    await _settingsService.HandleChangeWalletAddress(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
+                    break;
             }
         }
     }
+   
 }

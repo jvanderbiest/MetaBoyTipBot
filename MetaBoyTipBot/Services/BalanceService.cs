@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using MetaBoyTipBot.Constants;
 using MetaBoyTipBot.Repositories;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace MetaBoyTipBot.Services
 {
@@ -33,12 +32,7 @@ namespace MetaBoyTipBot.Services
                 balance = userBalance.Value;
             }
 
-            await _botService.Client.SendTextMessageAsync(
-                chatId: chat,
-                text: string.Format(ReplyConstants.Balance, balance),
-                parseMode: ParseMode.Markdown,
-                disableNotification: true
-            );
+            await _botService.SendTextMessage(chat.Id, string.Format(ReplyConstants.Balance, balance));
         }
     }
 

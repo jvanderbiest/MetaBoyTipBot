@@ -3,8 +3,6 @@ using MetaBoyTipBot.Services;
 using MetaBoyTipBot.Services.Conversation;
 using Moq;
 using NUnit.Framework;
-using RichardSzalay.MockHttp;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace MetaBoyTipBot.Tests.Unit.Services
@@ -14,18 +12,12 @@ namespace MetaBoyTipBot.Tests.Unit.Services
     {
         private GroupMessageService _sut;
         private Mock<IBotService> _botServiceMock;
-        private MockHttpMessageHandler _mockHttp;
         private Mock<ITipService> _tipServiceMock;
-
-        public string Token => "1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy";
 
         [SetUp]
         public void BeforeEachTest()
         {
-            _mockHttp = new MockHttpMessageHandler();
-
             _botServiceMock = new Mock<IBotService>();
-            _botServiceMock.Setup(x => x.Client).Returns(new TelegramBotClient(Token, _mockHttp.ToHttpClient()));
 
             _tipServiceMock = new Mock<ITipService>();
             _tipServiceMock.Setup(x => x.TryTip(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(10);
@@ -39,7 +31,8 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var update = ValidUpdate;
             update.Message.ReplyToMessage = null;
             await _sut.Handle(update);
-            _mockHttp.VerifyNoOutstandingExpectation();
+
+            _botServiceMock.VerifyNoOtherCalls();;
         }
 
         [TestCase(true, false)]
@@ -52,7 +45,7 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             update.Message.ReplyToMessage.From.IsBot = isReplyBot;
 
             await _sut.Handle(update);
-            _mockHttp.VerifyNoOutstandingExpectation();
+            _botServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -64,19 +57,34 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             update.Message.ReplyToMessage.From.Id = userId;
 
             await _sut.Handle(update);
-            _mockHttp.VerifyNoOutstandingExpectation();
+            _botServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
         public async Task ShouldDoATip()
         {
-            _mockHttp.Expect($"https://api.telegram.org/bot{Token}/sendMessage")
-                .Respond("application/json", "{'ok' : true }");
-
             var update = ValidUpdate;
+            var expectedTipText = "You got tipped *10 MHC*";
 
             await _sut.Handle(update);
-            _mockHttp.VerifyNoOutstandingExpectation();
+
+            _botServiceMock.Verify(x => x.SendTextMessageAsReply(update.Message.Chat.Id, expectedTipText, update.Message.ReplyToMessage.MessageId, null), Times.Once);
+            _botServiceMock.VerifyNoOtherCalls();
+        }
+
+        [Test]
+        public async Task ShouldDoATipWithName()
+        {
+            var update = ValidUpdate;
+            update.Message.From.FirstName = "First";
+            update.Message.From.LastName = "LastName";
+
+            var expectedTipText = "You got tipped *10 MHC* by *First LastName*";
+
+            await _sut.Handle(update);
+
+            _botServiceMock.Verify(x => x.SendTextMessageAsReply(update.Message.Chat.Id, expectedTipText, update.Message.ReplyToMessage.MessageId, null), Times.Once);
+            _botServiceMock.VerifyNoOtherCalls();
         }
 
         public Update ValidUpdate => new()

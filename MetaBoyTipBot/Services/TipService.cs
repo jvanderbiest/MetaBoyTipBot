@@ -30,7 +30,7 @@ namespace MetaBoyTipBot.Services
         /// <param name="senderUserId">The user sending the tip</param>
         /// <param name="receiverUserId">The user receiving the tip</param>
         /// <returns>The tip amount if successful</returns>
-        public async Task<int> TryTip(string messageText, int senderUserId, int receiverUserId)
+        public async Task<double> TryTip(string messageText, int senderUserId, int receiverUserId)
         {
             var amount = CalculateTipTextAmount(messageText);
             if (amount <= 0) { return amount; }
@@ -47,7 +47,7 @@ namespace MetaBoyTipBot.Services
         /// <param name="senderUserId">The id of the tip sender</param>
         /// <param name="receiverUserId">The id of the tip receiver</param>
         /// <returns>The amount that was tipped which includes the user tip default multiplier</returns>
-        private async Task<int> SettleTip(int amount, int senderUserId, int receiverUserId)
+        private async Task<double> SettleTip(int amount, int senderUserId, int receiverUserId)
         {
             var senderProfile = await _userBalanceRepository.Get(senderUserId);
             var totalAmount = senderProfile.DefaultTipAmount * amount;
@@ -138,6 +138,6 @@ namespace MetaBoyTipBot.Services
 
     public interface ITipService
     {
-        Task<int> TryTip(string messageText, int senderUserId, int receiverUserId);
+        Task<double> TryTip(string messageText, int senderUserId, int receiverUserId);
     }
 }

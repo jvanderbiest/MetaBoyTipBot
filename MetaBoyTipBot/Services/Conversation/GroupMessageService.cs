@@ -44,11 +44,10 @@ namespace MetaBoyTipBot.Services.Conversation
                             tipText += $" by *{tipFromUsername}*";
                         }
 
-                        await _botService.Client.SendTextMessageAsync(
-                            chatId: update.Message.Chat.Id,
-                            parseMode: ParseMode.Markdown,
-                            replyToMessageId: update.Message.ReplyToMessage.MessageId,
-                            text: tipText);
+                        await _botService.SendTextMessageAsReply(
+                            update.Message.Chat.Id,
+                            tipText,
+                            update.Message.ReplyToMessage.MessageId);
                     }
                 }
             }

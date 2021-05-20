@@ -2,12 +2,10 @@
 using System.Threading.Tasks;
 using MetaBoyTipBot.Configuration;
 using MetaBoyTipBot.Constants;
-using MetaBoyTipBot.Extensions;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.TableEntities;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MetaBoyTipBot.Services
@@ -37,31 +35,14 @@ namespace MetaBoyTipBot.Services
             if (walletUser != null)
             {
                 var walletAddress = walletUser.PartitionKey;
-                await _botService.Client.SendTextMessageAsync(
-                    chatId: chat,
-                    text: string.Format(ReplyConstants.CurrentWallet, walletAddress),
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true
-                        );
+                await _botService.SendTextMessage(chat.Id, string.Format(ReplyConstants.CurrentWallet, walletAddress));
+                await _botService.SendTextMessage(chat.Id, _botConfiguration.Value.TipWalletAddress);
 
-                await _botService.Client.SendTextMessageAsync(
-                    chatId: chat,
-                    text: _botConfiguration.Value.TipWalletAddress,
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true
-                        );
-
-                await _botService.Client.ShowMenu(chat, null);
+                await _botService.ShowMainButtonMenu(chat.Id, null);
             }
             else
             {
-                await _botService.Client.SendTextMessageAsync(
-                    chatId: chat,
-                    text: ReplyConstants.EnterMetahashWallet,
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyMarkup: new ForceReplyMarkup { Selective = false }
-                );
+                await _botService.SendTextMessage(chat.Id, ReplyConstants.EnterTopUpMetahashWallet, new ForceReplyMarkup { Selective = false });
             }
         }
     }

@@ -13,11 +13,13 @@ namespace MetaBoyTipBot.Controllers
     {
         private readonly IUpdateService _updateService;
         private readonly IOptions<BotConfiguration> _botConfiguration;
+        private readonly INodeExecutionService _nodeExecutionService;
 
-        public UpdateController(IUpdateService updateService, IOptions<BotConfiguration> botConfiguration)
+        public UpdateController(IUpdateService updateService, IOptions<BotConfiguration> botConfiguration, INodeExecutionService nodeExecutionService)
         {
             _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
             _botConfiguration = botConfiguration ?? throw new ArgumentNullException(nameof(botConfiguration));
+            _nodeExecutionService = nodeExecutionService;
         }
 
         [HttpPost]
@@ -29,6 +31,14 @@ namespace MetaBoyTipBot.Controllers
             }
 
             await _updateService.Update(update);
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+
+            //await _nodeExecutionService.Withdraw();
             return Ok();
         }
     }

@@ -1,0 +1,1 @@
+dotnet build MetaBoyTipBot.sln /nologo /p:PublishProfile=Release /p:PackageLocation="package" /p:OutDir="out" /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:platform="Any CPU" /p:configuration="Release" /p:DesktopBuildPackageLocation="dist\package.zip"

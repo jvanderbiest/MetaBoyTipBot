@@ -3,9 +3,9 @@ using Newtonsoft.Json;
 
 namespace MetaBoyTipBot.Requests.Torrent
 {
-    public class TorrentRequest
+    public class MhcRequest
     {
-        public TorrentRequest()
+        public MhcRequest()
         {
             JsonRpc = "2.0";
             Id = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;

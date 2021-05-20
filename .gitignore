@@ -387,3 +387,10 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 MetaBoyTipBot/appsettings.Development.json
+MetaBoyTipBot.Tests/out/
+MetaBoyTipBot/out/
+MetaBoyTipBot/Properties/
+MetaBoyTipBot/package/
+MetaBoyTipBot/appsettings.json
+MetaBoyTipBot/appsettings.json
+MetaBoyTipBot/appsettings.Production.json

@@ -1,3 +1,4 @@
+using Jering.Javascript.NodeJS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +11,13 @@ using MetaBoyTipBot.Jobs;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.Services;
 using MetaBoyTipBot.Services.Conversation;
+using Microsoft.AspNetCore.Mvc;
 using Quartz;
 
 namespace MetaBoyTipBot
 {
+    
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -29,6 +33,12 @@ namespace MetaBoyTipBot
             services.Configure<BotConfiguration>(Configuration.GetSection("BotConfiguration"));
             services.AddHttpClient();
 
+            services.AddScoped<INodeExecutionService, NodeExecutionService>();
+
+            // Add node js
+            services.AddNodeJS();
+            services.Configure<OutOfProcessNodeJSServiceOptions>(x => x.TimeoutMS = 10000);
+                
             services.AddTransient<IMessageFactory, MessageFactory>();
 
             services.AddScoped<IUpdateService, UpdateService>();
@@ -36,6 +46,8 @@ namespace MetaBoyTipBot
             services.AddScoped<ITableStorageService, TableStorageService>();
             services.AddScoped<IBalanceService, BalanceService>();
             services.AddScoped<ITopUpService, TopUpService>();
+            services.AddScoped<IWithdrawalService, WithdrawalService>();
+            services.AddScoped<ISettingsService, SettingsService>();
             services.AddScoped<ITransactionHandlerService, TransactionHandlerService>();
 
             services.AddScoped<ITransactionHistoryRepository, TransactionHistoryRepository>();

@@ -25,9 +25,11 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var walletUserRepositoryMock = new Mock<IWalletUserRepository>();
             var balanceServiceMock = new Mock<IBalanceService>();
             var topUpServiceMock = new Mock<ITopUpService>();
+            var withdrawalServiceMock = new Mock<IWithdrawalService>();
+            var settingsServiceMock = new Mock<ISettingsService>();
 
-            serviceProviderMock.Setup(x => x.GetService(typeof(CallbackMessageService))).Returns(new CallbackMessageService(balanceServiceMock.Object, topUpServiceMock.Object));
-            serviceProviderMock.Setup(x => x.GetService(typeof(PrivateMessageService))).Returns(new PrivateMessageService(botConfigurationMock.Object, botServiceMock.Object, walletUserRepositoryMock.Object));
+            serviceProviderMock.Setup(x => x.GetService(typeof(CallbackMessageService))).Returns(new CallbackMessageService(balanceServiceMock.Object, topUpServiceMock.Object, withdrawalServiceMock.Object, settingsServiceMock.Object));
+            serviceProviderMock.Setup(x => x.GetService(typeof(PrivateMessageService))).Returns(new PrivateMessageService(botConfigurationMock.Object, botServiceMock.Object, walletUserRepositoryMock.Object, withdrawalServiceMock.Object, settingsServiceMock.Object));
             serviceProviderMock.Setup(x => x.GetService(typeof(GroupMessageService))).Returns(new GroupMessageService(botServiceMock.Object, tipServiceMock.Object));
             _sut = new MessageFactory(serviceProviderMock.Object);
         }

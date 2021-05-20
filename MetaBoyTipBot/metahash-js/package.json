@@ -1,0 +1,47 @@
+{
+  "name": "metahash-js",
+  "version": "0.3.0",
+  "description": "JS SDK for MetaHash Blockchain",
+  "module": "src/index",
+  "main": "src/index.js",
+  "unpkg": "dist/metahash.min.js",
+  "browser": "dist/metahash.min.js",
+  "files": [
+    "/src/",
+    "/dist/"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/xboston/metahash-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xboston/metahash-js.git"
+  },
+  "keywords": [
+    "metahash",
+    "blockchain",
+    "sdk"
+  ],
+  "bugs": {
+    "url": "https://github.com/xboston/metahash-js/issues"
+  },
+  "dependencies": {
+    "crypto-js": "^4.0.0",
+    "dohdec": "^3.1.0",
+    "elliptic": "^6.5.4",
+    "key-encoder": "^2.0.3",
+    "locutus": "^2.0.14",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "19.0.0",
+    "@rollup/plugin-json": "4.1.0",
+    "@rollup/plugin-node-resolve": "13.0.0",
+    "@stream-io/rollup-plugin-node-builtins": "2.1.5",
+    "rollup": "2.48.0",
+    "rollup-plugin-node-globals": "1.4.0",
+    "rollup-plugin-terser": "7.0.2",
+  },
+  "scripts": {
+    "build": "rollup -c"
+  }
+}

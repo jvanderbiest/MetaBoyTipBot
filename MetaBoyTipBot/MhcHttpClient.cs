@@ -20,8 +20,7 @@ namespace MetaBoyTipBot
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
-
-
+       
         public async Task<FetchHistoryFilterResponse> FetchHistory(string walletAddress)
         {
             var queryTorrentRequest = new QueryHistoryFilterRequest
@@ -31,7 +30,7 @@ namespace MetaBoyTipBot
                 BeginTx = 0
             };
 
-            var torrentRequest = new TorrentRequest { Params = queryTorrentRequest, Method = "fetch-history" };
+            var torrentRequest = new MhcRequest { Params = queryTorrentRequest, Method = "fetch-history" };
             var responseJson = await QueryTorrent(torrentRequest);
             var fetchHistoryResponse = JsonConvert.DeserializeObject<FetchHistoryFilterResponse>(responseJson);
             return fetchHistoryResponse;
@@ -44,17 +43,22 @@ namespace MetaBoyTipBot
                 Address = walletAddress
             };
 
-            var torrentRequest = new TorrentRequest { Params = queryTorrentRequest, Method = "fetch-balance" };
+            var torrentRequest = new MhcRequest { Params = queryTorrentRequest, Method = "fetch-balance" };
             var responseJson = await QueryTorrent(torrentRequest);
             var fetchBalanceResponse = JsonConvert.DeserializeObject<FetchBalanceResponse>(responseJson);
             return fetchBalanceResponse;
         }
 
-        private async Task<string> QueryTorrent(TorrentRequest torrentRequest)
+        private async Task<string> QueryTorrent(MhcRequest mhcRequest)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, TorUrl))
+            return await Send(mhcRequest, TorUrl);
+        }
+
+        private async Task<string> Send(MhcRequest mhcRequest, string url)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, url))
             {
-                var json = JsonConvert.SerializeObject(torrentRequest);
+                var json = JsonConvert.SerializeObject(mhcRequest);
                 using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
                 {
                     request.Content = stringContent;
