@@ -35,11 +35,7 @@ namespace MetaBoyTipBot.Services.Conversation
                     await _balanceService.Handle(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
                     break;
                 case CallBackConstants.WithDraw:
-                    // todo
-                    // if no user wallet prompt for user wallet
-                    
-                    // prompt for amount
-
+                    await _withdrawalService.Prompt(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);
                     break;
                 case CallBackConstants.Settings:
                     await _settingsService.ShowSettingsMenu(update.CallbackQuery.Message.Chat, update.CallbackQuery.From.Id);

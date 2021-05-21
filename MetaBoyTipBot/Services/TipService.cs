@@ -47,7 +47,7 @@ namespace MetaBoyTipBot.Services
         /// <param name="senderUserId">The id of the tip sender</param>
         /// <param name="receiverUserId">The id of the tip receiver</param>
         /// <returns>The amount that was tipped which includes the user tip default multiplier</returns>
-        private async Task<double> SettleTip(int amount, int senderUserId, int receiverUserId)
+        private async Task<double> SettleTip(double amount, int senderUserId, int receiverUserId)
         {
             var senderProfile = await _userBalanceRepository.Get(senderUserId);
             var totalAmount = senderProfile.DefaultTipAmount * amount;
@@ -58,8 +58,8 @@ namespace MetaBoyTipBot.Services
             }
 
             var receiverProfile = await _userBalanceRepository.Get(receiverUserId);
-            senderProfile.Balance -= totalAmount;
-            receiverProfile.Balance += totalAmount;
+            senderProfile.GiveTip(totalAmount);
+            receiverProfile.ReceiveTip(totalAmount);
 
             await _userBalanceRepository.Update(senderProfile);
             await _userBalanceRepository.Update(receiverProfile);
@@ -74,7 +74,7 @@ namespace MetaBoyTipBot.Services
         /// </summary>
         /// <param name="messageText">The text that the user sends in the chat</param>
         /// <returns></returns>
-        private int CalculateTipTextAmount(string messageText)
+        private double CalculateTipTextAmount(string messageText)
         {
             var hasText = !string.IsNullOrWhiteSpace(messageText);
             if (hasText)
@@ -90,7 +90,9 @@ namespace MetaBoyTipBot.Services
 
                 if (tipAmount > 0)
                 {
-                    return (int)tipAmount;
+                    var tipAmountDouble = (double)tipAmount;
+                    tipAmountDouble = Math.Round(tipAmountDouble, 6);
+                    return tipAmountDouble;
                 }
             }
 
@@ -110,7 +112,7 @@ namespace MetaBoyTipBot.Services
             return thumbMultiplier;
         }
 
-        private int? GetTipAmount(string messageText)
+        private double? GetTipAmount(string messageText)
         {
             var tipTextMatch = GetTipTextMatch("!tip ", messageText);
             if (tipTextMatch != null)
@@ -122,12 +124,12 @@ namespace MetaBoyTipBot.Services
             return tipTextMatch;
         }
 
-        private int? GetTipTextMatch(string prefix, string messageText)
+        private double? GetTipTextMatch(string prefix, string messageText)
         {
-            var tipRegex = Regex.Match(messageText, $"{prefix}(\\d+)", RegexOptions.IgnoreCase);
+            var tipRegex = Regex.Match(messageText, $"{prefix}(\\d+[\\.\\,]?\\d*)", RegexOptions.IgnoreCase);
             if (!tipRegex.Success || tipRegex.Groups.Count != 2) { return null; }
 
-            if (int.TryParse(tipRegex.Groups[1].Value, out int tipAmount))
+            if (double.TryParse(tipRegex.Groups[1].Value, out double tipAmount))
             {
                 return tipAmount;
             }

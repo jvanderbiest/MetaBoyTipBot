@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MetaBoyTipBot.Configuration;
 using MetaBoyTipBot.Constants;
+using MetaBoyTipBot.Extensions;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.TableEntities;
 using Microsoft.Extensions.Logging;
@@ -58,7 +59,7 @@ namespace MetaBoyTipBot.Services
         {
             var allTransactionHistory = await _mhcHttpClient.FetchHistory(_botConfiguration.Value.TipWalletAddress);
 
-            var startUnixTimeStamp = (int)startDateTime.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+            var startUnixTimeStamp = DateTime.UtcNow.GetUnixEpochTimestamp();
             var newTransactionHistory = allTransactionHistory.Result.Where(x =>
                 x.Timestamp > startUnixTimeStamp &&
                 x.To == _botConfiguration.Value.TipWalletAddress &&

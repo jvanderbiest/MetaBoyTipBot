@@ -38,52 +38,60 @@ namespace MetaBoyTipBot.Services.Conversation
 
         public async Task Handle(Update update)
         {
-            var replyMessage = update.Message.ReplyToMessage.Text;
-            switch (replyMessage)
+            var isReplyMessage = update.Message.ReplyToMessage != null;
+            if (!isReplyMessage)
             {
-                case ReplyConstants.EnterDefaultTipAmount:
-                    {
-                        if (double.TryParse(update.Message.Text, out double defaultTipAmount))
+                await _botService.ShowMainButtonMenu(update.Message.Chat.Id, null);
+            }
+            else
+            {
+                var replyMessage = update.Message.ReplyToMessage?.Text;
+                switch (replyMessage)
+                {
+                    case ReplyConstants.EnterDefaultTipAmount:
                         {
-                            await _settingsService.SetDefaultTipAmount(update.Message.Chat, update.Message.From.Id, defaultTipAmount);
+                            if (double.TryParse(update.Message.Text, out double defaultTipAmount))
+                            {
+                                await _settingsService.SetDefaultTipAmount(update.Message.Chat, update.Message.From.Id, defaultTipAmount);
+                            }
+                            else
+                            {
+                                await _botService.SendTextMessage(update.Message.Chat.Id, ReplyConstants.InvalidAmount);
+                            }
+                            break;
+                        }
+                    case ReplyConstants.EnterWithdrawalWallet:
+                        {
+                            var walletAddress = ValidateWallet(update.Message.Text);
+                            var walletAddressAction = await TrySetWallet(walletAddress, update);
+
+                            await SendWalletSetReply(update, walletAddressAction, walletAddress, true);
+                            break;
+                        }
+                    case ReplyConstants.EnterTopUpMetahashWallet:
+                        {
+                            var walletAddress = ValidateWallet(update.Message.Text);
+                            var walletAddressAction = await TrySetWallet(walletAddress, update);
+
+                            await SendWalletSetReply(update, walletAddressAction, walletAddress, false);
+                            break;
+                        }
+                    case ReplyConstants.EnterWithdrawalAmount:
+                        if (double.TryParse(update.Message.Text, out double amount))
+                        {
+                            await _withdrawalService.Handle(update.Message.Chat, update.Message.From.Id, amount);
                         }
                         else
                         {
                             await _botService.SendTextMessage(update.Message.Chat.Id, ReplyConstants.InvalidAmount);
                         }
                         break;
-                    }
-                case ReplyConstants.EnterWithdrawalWallet:
-                    {
-                        var walletAddress = ValidateWallet(update.Message.Text);
-                        var walletAddressAction = await TrySetWallet(walletAddress, update);
-
-                        await SendWalletSetReply(update, walletAddressAction, walletAddress, true);
-                        break;
-                    }
-                case ReplyConstants.EnterTopUpMetahashWallet:
-                    {
-                        var walletAddress = ValidateWallet(update.Message.Text);
-                        var walletAddressAction = await TrySetWallet(walletAddress, update);
-
-                        await SendWalletSetReply(update, walletAddressAction, walletAddress, false);
-                        break;
-                    }
-                case ReplyConstants.EnterWithdrawalAmount:
-                    if (double.TryParse(update.Message.Text, out double amount))
-                    {
-                        await _withdrawalService.Handle(update.Message.Chat, update.Message.From.Id, amount);
-                    }
-                    else
-                    {
-                        await _botService.SendTextMessage(update.Message.Chat.Id, ReplyConstants.InvalidAmount);
-                    }
-                    break;
-                default:
-                    {
-                        await _botService.ShowMainButtonMenu(update.Message.Chat.Id, update.Message.MessageId);
-                        break;
-                    }
+                    default:
+                        {
+                            await _botService.ShowMainButtonMenu(update.Message.Chat.Id, update.Message.MessageId);
+                            break;
+                        }
+                }
             }
         }
 

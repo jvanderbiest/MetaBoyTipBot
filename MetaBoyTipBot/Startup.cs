@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Jering.Javascript.NodeJS;
+using LazyCache;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,16 +10,15 @@ using Microsoft.OpenApi.Models;
 using MetaBoyTipBot.Configuration;
 using MetaBoyTipBot.Extensions;
 using MetaBoyTipBot.Jobs;
+using MetaBoyTipBot.Middleware;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.Services;
 using MetaBoyTipBot.Services.Conversation;
-using Microsoft.AspNetCore.Mvc;
 using Quartz;
 
 namespace MetaBoyTipBot
 {
-    
-
+    [ExcludeFromCodeCoverage]
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -41,6 +42,7 @@ namespace MetaBoyTipBot
                 
             services.AddTransient<IMessageFactory, MessageFactory>();
 
+            services.AddSingleton<IStartupOptions>(_ => new StartupOptions());
             services.AddScoped<IUpdateService, UpdateService>();
             services.AddScoped<ITipService, TipService>();
             services.AddScoped<ITableStorageService, TableStorageService>();
@@ -80,6 +82,8 @@ namespace MetaBoyTipBot
                 options.WaitForJobsToComplete = true;
             });
 
+            services.AddLazyCache();
+            
             services.AddControllers().AddNewtonsoftJson();
             services.AddSwaggerGen(c =>
             {
@@ -88,7 +92,7 @@ namespace MetaBoyTipBot
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IAppCache appCache)
         {
             if (env.IsDevelopment())
             {
@@ -97,12 +101,15 @@ namespace MetaBoyTipBot
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MetaBoyTipBot v1"));
             }
 
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
             app.UseAuthorization();
 
+            app.UseMiddleware<TelegramAuthMiddleware>();
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

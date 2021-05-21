@@ -18,6 +18,8 @@ namespace MetaBoyTipBot.TableEntities
         }
 
         public double Balance { get; set; }
+        public double TotalTipsGiven { get; set; }
+        public double TotalTipsReceived { get; set; }
         public string Address { get; set; }
 
         /// <summary>
@@ -27,6 +29,18 @@ namespace MetaBoyTipBot.TableEntities
         {
             get => _defaultTipAmount == 0 ? 1 : _defaultTipAmount;
             set => _defaultTipAmount = value;
+        }
+
+        public void ReceiveTip(double amount)
+        {
+            Balance += amount;
+            TotalTipsReceived += amount;
+        }
+
+        public void GiveTip(double amount)
+        {
+            Balance -= amount;
+            TotalTipsGiven += amount;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Serilog;
 
 namespace MetaBoyTipBot
 {
+    [ExcludeFromCodeCoverage]
     public class Program
     {
         public static async Task Main(string[] args)

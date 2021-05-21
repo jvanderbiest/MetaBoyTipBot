@@ -1,4 +1,5 @@
 ﻿using System;
+using MetaBoyTipBot.Extensions;
 using Newtonsoft.Json;
 
 namespace MetaBoyTipBot.Requests.Torrent
@@ -8,7 +9,7 @@ namespace MetaBoyTipBot.Requests.Torrent
         public MhcRequest()
         {
             JsonRpc = "2.0";
-            Id = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+            Id = DateTime.UtcNow.GetUnixEpochTimestamp();
         }
 
         [JsonProperty("params")]

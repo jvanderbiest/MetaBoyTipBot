@@ -59,6 +59,48 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             Assert.AreEqual(tipAmount, amount);
         }
 
+        [Test]
+        public async Task ShouldSettleTotalTipGivenAndReceived()
+        {
+            var senderUserId = 1111;
+            var receiverUserId = 9999;
+            var tipAmount = 12;
+
+            var senderUserBalance = new UserBalance {Balance = 1000, TotalTipsGiven = 10.2, TotalTipsReceived = 4.6};
+            var receiverUserBalance = new UserBalance {Balance = 30.20, TotalTipsGiven = 409.5, TotalTipsReceived = 300.984};
+
+            _userBalanceRepository.Setup(x => x.Get(senderUserId)).ReturnsAsync(senderUserBalance);
+            _userBalanceRepository.Setup(x => x.Get(receiverUserId)).ReturnsAsync(receiverUserBalance);
+
+            var amount = await _sut.TryTip($"!tip {tipAmount}", senderUserId, receiverUserId);
+            Assert.AreEqual(1000 - amount, senderUserBalance.Balance);
+            Assert.AreEqual(10.2 + amount, senderUserBalance.TotalTipsGiven);
+            Assert.AreEqual(4.6, senderUserBalance.TotalTipsReceived);
+
+            Assert.AreEqual(30.20 + amount, receiverUserBalance.Balance);
+            Assert.AreEqual(409.5, receiverUserBalance.TotalTipsGiven);
+            Assert.AreEqual(300.984 + amount, receiverUserBalance.TotalTipsReceived);
+        }
+
+        /// <summary>
+        /// Tip amount allows 6 decimal digits, any other decimals need to be rounded up to those 6 decimal digits.
+        /// </summary>
+        /// <returns></returns>
+        [TestCase("!tip 95.12345678", 95.123457)]
+        [TestCase("!tip 95.12", 95.12)]
+        [TestCase("!tip 95.12222222", 95.122222)]
+        public async Task ShouldRoundIfMoreDecimals(string tipText, double expectedTip)
+        {
+            var senderUserId = 1111;
+            var receiverUserId = 9999;
+
+            _userBalanceRepository.Setup(x => x.Get(senderUserId)).ReturnsAsync(new UserBalance { Balance = 1000 });
+            _userBalanceRepository.Setup(x => x.Get(receiverUserId)).ReturnsAsync(new UserBalance());
+
+            var amount = await _sut.TryTip(tipText, senderUserId, receiverUserId);
+            Assert.AreEqual(expectedTip, amount);
+        }
+
         [TestCase("👍👍", 0)]
         public async Task ShouldValidateToZeroWhenBalanceIsInsufficient(string text, int tipAmount)
         {

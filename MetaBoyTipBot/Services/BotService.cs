@@ -50,7 +50,7 @@ namespace MetaBoyTipBot.Services
 
             if (replyToMessageId.HasValue)
             {
-                var text = "Welcome! MetaBoy can send MHC tips other telegram users.\r\n\r\nAny response to another user's message containing\"+\", \" \ud83d\udc4d \" or \"Thank you\" transfers the MHC from your balance to that user..";
+                var text = "Welcome! MetaBoy can send MHC tips other telegram users.\r\n\r\nAny response to another user's message containing\"+\", \" \ud83d\udc4d \" or \"Thank you\" or \"!tip [amount]\" transfers the MHC from your balance to that user...\n\rSee examples here: ";
 
                 await SendTextMessageAsReply(chatId, text, replyToMessageId.Value, replyMarkup);
             }
@@ -67,14 +67,10 @@ namespace MetaBoyTipBot.Services
                 InlineKeyboardButton.WithCallbackData("\ud83c\udf81 Set single tip amount", CallBackConstants.SettingsDefaultTipAmount),
                 InlineKeyboardButton.WithCallbackData("\ud834\udf21 Change wallet address", CallBackConstants.SettingsChangeWalletAddress),
             };
-            var secondRow = new List<InlineKeyboardButton>
-            {
-                InlineKeyboardButton.WithCallbackData("\ud83d\udd19 Back", CallBackConstants.Back),
-            };
 
-            var replyMarkup = new InlineKeyboardMarkup(new List<IEnumerable<InlineKeyboardButton>> { firstRow, secondRow });
+            var replyMarkup = new InlineKeyboardMarkup(new List<IEnumerable<InlineKeyboardButton>> { firstRow });
 
-            await SendTextMessage(chatId, "Choose an option:", replyMarkup);
+            await SendTextMessage(chatId, "Choose a settings option:", replyMarkup);
         }
 
         public async Task SendTextMessage(long chatId, string text, IReplyMarkup replyMarkup = null)
