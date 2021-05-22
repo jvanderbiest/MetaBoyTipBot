@@ -13,13 +13,16 @@ namespace MetaBoyTipBot.Tests.Unit.Services
         private TipService _sut;
         private Mock<IUserBalanceRepository> _userBalanceRepository;
         private Mock<IUserBalanceHistoryRepository> _userBalanceHistoryRepository;
+        private Mock<IWithdrawalRepository> _withdrawalRepositoryMock;
 
         [SetUp]
         public void BeforeEachTest()
         {
             _userBalanceRepository = new Mock<IUserBalanceRepository>();
             _userBalanceHistoryRepository = new Mock<IUserBalanceHistoryRepository>();
-            _sut = new TipService(_userBalanceRepository.Object, _userBalanceHistoryRepository.Object);
+            _userBalanceHistoryRepository = new Mock<IUserBalanceHistoryRepository>();
+            _withdrawalRepositoryMock = new Mock<IWithdrawalRepository>();
+            _sut = new TipService(_userBalanceRepository.Object, _userBalanceHistoryRepository.Object, _withdrawalRepositoryMock.Object);
         }
 
         /// <summary>

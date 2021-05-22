@@ -11,11 +11,13 @@ namespace MetaBoyTipBot.Services
     {
         private readonly IUserBalanceRepository _userBalanceRepository;
         private readonly IUserBalanceHistoryRepository _userBalanceHistoryRepository;
+        private readonly IWithdrawalRepository _withdrawalRepository;
 
-        public TipService(IUserBalanceRepository userBalanceRepository, IUserBalanceHistoryRepository userBalanceHistoryRepository)
+        public TipService(IUserBalanceRepository userBalanceRepository, IUserBalanceHistoryRepository userBalanceHistoryRepository, IWithdrawalRepository withdrawalRepository)
         {
             _userBalanceRepository = userBalanceRepository ?? throw new ArgumentNullException(nameof(userBalanceRepository));
             _userBalanceHistoryRepository = userBalanceHistoryRepository ?? throw new ArgumentNullException(nameof(userBalanceHistoryRepository));
+            _withdrawalRepository = withdrawalRepository ?? throw new ArgumentNullException(nameof(withdrawalRepository));
         }
 
         public int GetTipDefault()
@@ -35,9 +37,30 @@ namespace MetaBoyTipBot.Services
             var amount = CalculateTipTextAmount(messageText);
             if (amount <= 0) { return amount; }
 
+            if (IsWithdrawalInProgress(senderUserId))
+            {
+                return 0;
+            }
+
             var settledAmount = await SettleTip(amount, senderUserId, receiverUserId);
            
             return settledAmount;
+        }
+
+        /// <summary>
+        /// Block the user giving tips if withdrawal is in progress
+        /// </summary>
+        /// <param name="senderUserId"></param>
+        /// <returns></returns>
+        private bool IsWithdrawalInProgress(int senderUserId)
+        {
+            var userWithdrawal = _withdrawalRepository.GetByUserId(senderUserId);
+            if (userWithdrawal?.StartDate < DateTime.UtcNow.AddMinutes(1))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

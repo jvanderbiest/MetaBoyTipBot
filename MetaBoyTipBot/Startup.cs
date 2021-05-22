@@ -57,6 +57,7 @@ namespace MetaBoyTipBot
             services.AddScoped<IWalletUserRepository, WalletUserRepository>();
             services.AddScoped<ITransactionCheckHistoryRepository, TransactionCheckHistoryRepository>();
             services.AddScoped<IUserBalanceHistoryRepository, UserBalanceHistoryRepository>();
+            services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
             
             services.AddScoped<IMhcHttpClient, MhcHttpClient>();
             

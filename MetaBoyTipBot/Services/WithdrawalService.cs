@@ -5,7 +5,6 @@ using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.TableEntities;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MetaBoyTipBot.Services
@@ -16,9 +15,11 @@ namespace MetaBoyTipBot.Services
         private readonly IWalletUserRepository _walletUserRepository;
         private readonly IBotService _botService;
         private readonly INodeExecutionService _nodeExecutionService;
+        private readonly IWithdrawalRepository _withdrawalRepository;
+        private readonly IMhcHttpClient _mhcHttpClient;
 
         public WithdrawalService(ILogger<IWithdrawalService> logger, IWalletUserRepository walletUserRepository, IBotService botService,
-            INodeExecutionService nodeExecutionService)
+            INodeExecutionService nodeExecutionService, IWithdrawalRepository withdrawalRepository, IMhcHttpClient mhcHttpClient)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _walletUserRepository =
@@ -26,6 +27,8 @@ namespace MetaBoyTipBot.Services
             _botService = botService ?? throw new ArgumentNullException(nameof(botService));
             _nodeExecutionService =
                 nodeExecutionService ?? throw new ArgumentNullException(nameof(nodeExecutionService));
+            _withdrawalRepository = withdrawalRepository ?? throw new ArgumentNullException(nameof(withdrawalRepository));
+            _mhcHttpClient = mhcHttpClient ?? throw new ArgumentNullException(nameof(mhcHttpClient));
         }
 
         private WalletUser GetWallet(int userId)
@@ -44,8 +47,47 @@ namespace MetaBoyTipBot.Services
 
                 try
                 {
-                    // todo start wallet table storage
-                    await _nodeExecutionService.Withdraw(walletAddress, amount);
+                    var userWithdrawal = new UserWithdrawal(chatUserId) { WalletAddress = walletAddress, Amount = amount, State = WithdrawalState.Created, StartDate = DateTime.UtcNow };
+                    await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                    var transactionId = await _nodeExecutionService.Withdraw(walletAddress, amount);
+
+                    if (!string.IsNullOrEmpty(transactionId))
+                    {
+                        userWithdrawal.TxId = transactionId;
+                        userWithdrawal.State = WithdrawalState.Verification;
+                        await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+
+                        await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawVerification);
+
+                        // make sure network is up to date
+                        System.Threading.Thread.Sleep(5000);
+
+                        if (!await VerifyTx(transactionId, userWithdrawal))
+                        {
+                            await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawVerificationLonger);
+
+                            // make sure network is up to date
+                            System.Threading.Thread.Sleep(10000);
+
+                            if (!await VerifyTx(transactionId, userWithdrawal))
+                            {
+                                userWithdrawal.State = WithdrawalState.Failed;
+                                await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                                await _botService.SendTextMessage(chat.Id, ReplyConstants.UnableToWithdraw);
+                            }
+                        }
+                        else
+                        {
+                            userWithdrawal.State = WithdrawalState.Completed;
+                            await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                            await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawalSuccess);
+                        }
+                    }
+                    else
+                    {
+                        userWithdrawal.State = WithdrawalState.Failed;
+                        await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -56,6 +98,26 @@ namespace MetaBoyTipBot.Services
                     await _botService.SendTextMessage(chat.Id, ReplyConstants.UnableToWithdraw);
                 }
             }
+        }
+
+        private async Task<bool> VerifyTx(string transactionId, UserWithdrawal userWithdrawal)
+        {
+            try
+            {
+                var txResponse = await _mhcHttpClient.GetTx(transactionId);
+                if (txResponse.TxResult?.Transaction?.Status == "ok")
+                {
+                    userWithdrawal.State = WithdrawalState.Completed;
+                    await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Could not verify transaction {transactionId}", ex);
+            }
+
+            return false;
         }
 
         public async Task Prompt(Chat chat, int chatUserId)

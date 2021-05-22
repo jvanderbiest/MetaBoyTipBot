@@ -28,5 +28,10 @@
         {
             public const string TableName = "WalletUser";
         }
+
+        public class Withdrawal
+        {
+            public const string TableName = "withdrawal";
+        }
     }
 }

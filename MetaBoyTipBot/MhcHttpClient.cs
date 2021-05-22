@@ -49,6 +49,19 @@ namespace MetaBoyTipBot
             return fetchBalanceResponse;
         }
 
+        public async Task<GetTxResponse> GetTx(string txId)
+        {
+            var getTxRequest = new GetTxRequest
+            {
+                 TxId = txId
+            };
+
+            var torrentRequest = new MhcRequest { Params = getTxRequest, Method = "get-tx" };
+            var responseJson = await QueryTorrent(torrentRequest);
+            var getTxResponse = JsonConvert.DeserializeObject<GetTxResponse>(responseJson);
+            return getTxResponse;
+        }
+
         private async Task<string> QueryTorrent(MhcRequest mhcRequest)
         {
             return await Send(mhcRequest, TorUrl);

@@ -12,6 +12,9 @@
         public const string CurrentWallet = "Your wallet address is \n\r{0} \n\r\n\rTo add funds, please send your desired amount of MHC to the following tip wallet address:";
         public const string InvalidWalletAddress = "The provided wallet address is invalid";
         public const string UnableToWithdraw = "We're sorry but the withdrawal operation failed. Get in touch with an admin to sort it out or try again later!";
+        public const string WithdrawalSuccess = "Withdrawal succeeded";
+        public const string WithdrawVerification = "Give us 10 seconds while we verify the withdrawal process...";
+        public const string WithdrawVerificationLonger = "It's taking longer than expected, just a few more moments...";
         public const string WalletAddressInUse = "The wallet address is already registered for another user";
         public const string InvalidAmount = "We provided amount is invalid";
         public const string Balance = "Your balance is *{0} MHC*";

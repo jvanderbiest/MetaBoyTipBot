@@ -7,5 +7,6 @@ namespace MetaBoyTipBot
     {
         Task<FetchHistoryFilterResponse> FetchHistory(string walletAddress);
         Task<FetchBalanceResponse> FetchBalance(string walletAddress);
+        Task<GetTxResponse> GetTx(string txId);
     }
 }

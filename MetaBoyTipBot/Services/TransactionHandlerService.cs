@@ -59,7 +59,7 @@ namespace MetaBoyTipBot.Services
         {
             var allTransactionHistory = await _mhcHttpClient.FetchHistory(_botConfiguration.Value.TipWalletAddress);
 
-            var startUnixTimeStamp = DateTime.UtcNow.GetUnixEpochTimestamp();
+            var startUnixTimeStamp = startDateTime.GetUnixEpochTimestamp();
             var newTransactionHistory = allTransactionHistory.Result.Where(x =>
                 x.Timestamp > startUnixTimeStamp &&
                 x.To == _botConfiguration.Value.TipWalletAddress &&
