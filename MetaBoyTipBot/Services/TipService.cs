@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MetaBoyTipBot.Extensions;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.TableEntities;
 
@@ -20,11 +21,6 @@ namespace MetaBoyTipBot.Services
             _withdrawalRepository = withdrawalRepository ?? throw new ArgumentNullException(nameof(withdrawalRepository));
         }
 
-        public int GetTipDefault()
-        {
-            return 1;
-        }
-
         /// <summary>
         /// Sends a tip to the user
         /// </summary>
@@ -34,15 +30,15 @@ namespace MetaBoyTipBot.Services
         /// <returns>The tip amount if successful</returns>
         public async Task<double> TryTip(string messageText, int senderUserId, int receiverUserId)
         {
-            var amount = CalculateTipTextAmount(messageText);
-            if (amount <= 0) { return amount; }
+            var tipResult = CalculateTipTextAmount(messageText);
+            if (tipResult == null || tipResult?.Amount <= 0) { return 0; }
 
             if (IsWithdrawalInProgress(senderUserId))
             {
                 return 0;
             }
 
-            var settledAmount = await SettleTip(amount, senderUserId, receiverUserId);
+            var settledAmount = await SettleTip(tipResult, senderUserId, receiverUserId);
            
             return settledAmount;
         }
@@ -66,14 +62,24 @@ namespace MetaBoyTipBot.Services
         /// <summary>
         /// Deducts the tip from the sender and adds it to the receivers tip balance
         /// </summary>
-        /// <param name="amount">The original tip amount</param>
+        /// <param name="tipAmountResult"></param>
         /// <param name="senderUserId">The id of the tip sender</param>
         /// <param name="receiverUserId">The id of the tip receiver</param>
         /// <returns>The amount that was tipped which includes the user tip default multiplier</returns>
-        private async Task<double> SettleTip(double amount, int senderUserId, int receiverUserId)
+        private async Task<double> SettleTip(TipAmountResult tipAmountResult, int senderUserId, int receiverUserId)
         {
+            if (tipAmountResult == null || tipAmountResult.Amount <= 0) { throw new Exception("Tip amount cannot be null or 0"); }
+
             var senderProfile = await _userBalanceRepository.Get(senderUserId);
-            var totalAmount = senderProfile.DefaultTipAmount * amount;
+
+            double totalAmount = 0;
+            if (tipAmountResult.RequiredMultiplier) {
+                totalAmount = senderProfile.DefaultTipAmount * tipAmountResult.Amount;
+            }
+            else
+            {
+                totalAmount = tipAmountResult.Amount;
+            }
 
             if (senderProfile.Balance < totalAmount)
             {
@@ -97,7 +103,7 @@ namespace MetaBoyTipBot.Services
         /// </summary>
         /// <param name="messageText">The text that the user sends in the chat</param>
         /// <returns></returns>
-        private double CalculateTipTextAmount(string messageText)
+        private TipAmountResult CalculateTipTextAmount(string messageText)
         {
             var hasText = !string.IsNullOrWhiteSpace(messageText);
             if (hasText)
@@ -107,19 +113,18 @@ namespace MetaBoyTipBot.Services
                 if (tipAmount == null)
                 {
                     var tipMultiplier = GetTipMultiplier(messageText);
-                    var tipDefault = GetTipDefault();
-                    tipAmount = tipDefault * tipMultiplier;
+                    return new TipAmountResult { Amount = tipMultiplier, RequiredMultiplier = true };
                 }
 
                 if (tipAmount > 0)
                 {
                     var tipAmountDouble = (double)tipAmount;
-                    tipAmountDouble = Math.Round(tipAmountDouble, 6);
-                    return tipAmountDouble;
+                    tipAmountDouble = tipAmountDouble.RoundMetahashHash();
+                    return new TipAmountResult {Amount = tipAmountDouble, RequiredMultiplier = false};
                 }
             }
 
-            return 0;
+            return null;
         }
 
         private int GetTipMultiplier(string messageText)
@@ -131,7 +136,7 @@ namespace MetaBoyTipBot.Services
                 return plusMultiplier;
             }
 
-            var thumbMultiplier = messageText.Count(x => x == '\ud83d');
+            var thumbMultiplier = Regex.Matches(messageText, "\ud83d\udc4d").Count;
             return thumbMultiplier;
         }
 
@@ -159,10 +164,33 @@ namespace MetaBoyTipBot.Services
 
             return null;
         }
+
+        private bool IsTipText(string messageText)
+        {
+            var tipAmount = GetTipTextMatch("!tip ", messageText);
+            if (tipAmount != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public interface ITipService
     {
         Task<double> TryTip(string messageText, int senderUserId, int receiverUserId);
+    }
+
+    public class TipAmountResult
+    {
+        private double _amount;
+        public bool RequiredMultiplier { get; set; }
+
+        public double Amount
+        {
+            get => _amount;
+            set => _amount = value.RoundMetahashHash();
+        }
     }
 }

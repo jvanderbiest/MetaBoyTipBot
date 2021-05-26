@@ -34,6 +34,7 @@ namespace MetaBoyTipBot.Tests.Unit.Services
         [TestCase("")]
         [TestCase(" ")]
         [TestCase("!tip0")]
+        [TestCase("another test 🔥")]
         public async Task ShouldValidateToZeroTip(string text)
         {
             var amount = await _sut.TryTip(text, 123, 456);
@@ -48,9 +49,10 @@ namespace MetaBoyTipBot.Tests.Unit.Services
         [TestCase("+++++", 5)]
         [TestCase("+50", 50)]
         [TestCase("!tip 50", 50)]
+        [TestCase("!tip 50.1512545", 50.151254)]
         [TestCase("!tip 50 good job", 50)]
         [TestCase("+50ze64", 50)]
-        public async Task ShouldValidateToTipAmount(string text, int tipAmount)
+        public async Task ShouldValidateToTipAmount(string text, double tipAmount)
         {
             var senderUserId = 1111;
             var receiverUserId = 9999;
@@ -141,6 +143,31 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             Assert.AreEqual(tipAmount * 2, amount);
             Assert.AreEqual(0, senderBalance.Balance);
             Assert.AreEqual(tipAmount * 2, receiverBalance.Balance);
+        }
+
+        /// <summary>
+        /// When using !tip [amount] it should ignore the user default multiplier amount
+        /// </summary>
+        /// <returns></returns>
+        [Test]
+        public async Task ShouldNotMultiplyWithUserDefaultTipAmount()
+        {
+            var tipAmount = 2;
+            var text = $"!tip {tipAmount}";
+
+            var senderUserId = 1111;
+            var receiverUserId = 9999;
+
+            var senderBalance = new UserBalance { Balance = 20, DefaultTipAmount = 10 };
+            var receiverBalance = new UserBalance() { Balance = 5 };
+
+            _userBalanceRepository.Setup(x => x.Get(senderUserId)).ReturnsAsync(senderBalance);
+            _userBalanceRepository.Setup(x => x.Get(receiverUserId)).ReturnsAsync(receiverBalance);
+
+            var amount = await _sut.TryTip(text, senderUserId, receiverUserId);
+            Assert.AreEqual(tipAmount, amount);
+            Assert.AreEqual(20 - tipAmount, senderBalance.Balance);
+            Assert.AreEqual(5 + tipAmount, receiverBalance.Balance);
         }
     }
 }

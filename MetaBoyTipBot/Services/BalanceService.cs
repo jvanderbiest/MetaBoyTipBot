@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using MetaBoyTipBot.Constants;
+using MetaBoyTipBot.Extensions;
 using MetaBoyTipBot.Repositories;
 using Telegram.Bot.Types;
 
@@ -29,7 +30,7 @@ namespace MetaBoyTipBot.Services
             var userBalance = await GetBalance(chatUserId);
             if (userBalance != null)
             {
-                balance = userBalance.Value;
+                balance = userBalance.Value.RoundMetahashHash();
             }
 
             await _botService.SendTextMessage(chat.Id, string.Format(ReplyConstants.Balance, balance));

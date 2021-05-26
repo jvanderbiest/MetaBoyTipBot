@@ -24,7 +24,7 @@ namespace MetaBoyTipBot
         private readonly INodeJSService _nodeJsService;
         private readonly ILogger<INodeExecutionService> _logger;
         private readonly IOptions<BotConfiguration> _botConfiguration;
-        private const string MainNodeFilePath = "./metahash-js/node.js";
+        private const string MainNodeFilePath = "./metahash-js/methods.js";
 
         public NodeExecutionService(INodeJSService nodeJsService, ILogger<INodeExecutionService> logger, IOptions<BotConfiguration> botConfiguration)
         {

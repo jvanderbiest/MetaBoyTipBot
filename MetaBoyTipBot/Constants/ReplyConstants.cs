@@ -8,7 +8,7 @@
         public const string EnterWithdrawalWallet = "Enter your withdrawal metahash wallet id (ex: 0x006...)";
         public const string WithdrawalWalletConfirmation = "We registered your withdrawal wallet address \n\r{0}.";
         public const string DefaultTipAmountConfirmation = "Your default tip amount is now set to *{0}* MHC.";
-        public const string TransferToDonationWallet = "We registered your wallet address \n\r{0}. \n\r\n\rTo add funds, please send your desired amount of MHC to the following tip wallet address:";
+        public const string TransferToDonationWallet = "We registered your wallet address \n\r{0} \n\r\n\rTo add funds, please send your desired amount of MHC to the following tip wallet address:";
         public const string CurrentWallet = "Your wallet address is \n\r{0} \n\r\n\rTo add funds, please send your desired amount of MHC to the following tip wallet address:";
         public const string InvalidWalletAddress = "The provided wallet address is invalid";
         public const string UnableToWithdraw = "We're sorry but the withdrawal operation failed. Get in touch with an admin to sort it out or try again later!";

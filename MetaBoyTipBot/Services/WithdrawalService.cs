@@ -17,9 +17,10 @@ namespace MetaBoyTipBot.Services
         private readonly INodeExecutionService _nodeExecutionService;
         private readonly IWithdrawalRepository _withdrawalRepository;
         private readonly IMhcHttpClient _mhcHttpClient;
+        private readonly IUserBalanceRepository _userBalanceRepository;
 
         public WithdrawalService(ILogger<IWithdrawalService> logger, IWalletUserRepository walletUserRepository, IBotService botService,
-            INodeExecutionService nodeExecutionService, IWithdrawalRepository withdrawalRepository, IMhcHttpClient mhcHttpClient)
+            INodeExecutionService nodeExecutionService, IWithdrawalRepository withdrawalRepository, IMhcHttpClient mhcHttpClient, IUserBalanceRepository userBalanceRepository)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _walletUserRepository =
@@ -29,6 +30,7 @@ namespace MetaBoyTipBot.Services
                 nodeExecutionService ?? throw new ArgumentNullException(nameof(nodeExecutionService));
             _withdrawalRepository = withdrawalRepository ?? throw new ArgumentNullException(nameof(withdrawalRepository));
             _mhcHttpClient = mhcHttpClient ?? throw new ArgumentNullException(nameof(mhcHttpClient));
+            _userBalanceRepository = userBalanceRepository ?? throw new ArgumentNullException(nameof(userBalanceRepository));
         }
 
         private WalletUser GetWallet(int userId)
@@ -75,12 +77,14 @@ namespace MetaBoyTipBot.Services
                                 await _withdrawalRepository.AddOrUpdate(userWithdrawal);
                                 await _botService.SendTextMessage(chat.Id, ReplyConstants.UnableToWithdraw);
                             }
+                            else
+                            {
+                                await SetWithdrawalSuccess(userWithdrawal, chat.Id, chatUserId, amount, transactionId);
+                            }
                         }
                         else
                         {
-                            userWithdrawal.State = WithdrawalState.Completed;
-                            await _withdrawalRepository.AddOrUpdate(userWithdrawal);
-                            await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawalSuccess);
+                            await SetWithdrawalSuccess(userWithdrawal, chat.Id, chatUserId, amount, transactionId);
                         }
                     }
                     else
@@ -98,6 +102,20 @@ namespace MetaBoyTipBot.Services
                     await _botService.SendTextMessage(chat.Id, ReplyConstants.UnableToWithdraw);
                 }
             }
+        }
+
+        private async Task SetWithdrawalSuccess(UserWithdrawal userWithdrawal, long chatId, int chatUserId, double amount, string transactionId)
+        {
+            var userBalance = await _userBalanceRepository.Get(chatUserId);
+            userBalance.Balance -= amount;
+            await _userBalanceRepository.Update(userBalance);
+            if (userBalance.Balance < 0)
+            {
+                _logger.LogError($"Balance for {chatUserId} is below 0 after withdrawal transaction {transactionId}");
+            }
+            userWithdrawal.State = WithdrawalState.Completed;
+            await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+            await _botService.SendTextMessage(chatId, ReplyConstants.WithdrawalSuccess);
         }
 
         private async Task<bool> VerifyTx(string transactionId, UserWithdrawal userWithdrawal)

@@ -17,6 +17,7 @@ namespace MetaBoyTipBot.Extensions
                 tableStorageService.CreateTableAsync(AzureTableConstants.TransactionHistory.TableName);
                 tableStorageService.CreateTableAsync(AzureTableConstants.TransactionCheckHistory.TableName);
                 tableStorageService.CreateTableAsync(AzureTableConstants.UserBalanceHistory.TableName);
+                tableStorageService.CreateTableAsync(AzureTableConstants.Withdrawal.TableName);
             }
         }
     }
