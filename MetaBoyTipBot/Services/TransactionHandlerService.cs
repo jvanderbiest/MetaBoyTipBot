@@ -80,10 +80,11 @@ namespace MetaBoyTipBot.Services
 
                 if (walletUser == null)
                 {
-                    _logger.LogInformation($"No associated user for wallet '{newTransaction.To} and transaction '{newTransaction.Transaction}'. Thanks for the donation of '{newTransaction.RealValue}' MHC!");
+                    _logger.LogInformation($"No associated user for wallet '{newTransaction.From} and transaction '{newTransaction.Transaction}'. Thanks for the donation of '{newTransaction.RealValue}' MHC!");
                 }
                 else
                 {
+                    _logger.LogInformation($"Attempting to add '{newTransaction.RealValue}' MHC from '{newTransaction.From} and transaction '{newTransaction.Transaction}'.");
                     var userId = walletUser.GetUserId().GetValueOrDefault();
                     var transactionHistory = new TransactionHistory(newTransaction.To, newTransaction.Timestamp)
                     {
@@ -117,7 +118,11 @@ namespace MetaBoyTipBot.Services
                             parseMode: ParseMode.Markdown,
                             disableNotification: true
                         );
+
+                        _logger.LogInformation($"Notified user with chatId: '{walletUser.PrivateChatId}' for transaction '{newTransaction.Transaction}'");
                     }
+
+                    _logger.LogInformation($"Added '{newTransaction.RealValue}' MHC from '{newTransaction.From} and transaction '{newTransaction.Transaction}'.");
 
                     handledTransactions++;
                 }

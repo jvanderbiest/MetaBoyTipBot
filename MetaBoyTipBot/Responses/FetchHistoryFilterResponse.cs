@@ -21,7 +21,7 @@ namespace MetaBoyTipBot.Responses
         public string To { get; set; }
 
         [JsonProperty("value")]
-        public int Value { get; set; }
+        public long Value { get; set; }
 
         [JsonProperty("transaction")]
         public string Transaction { get; set; }
@@ -69,7 +69,7 @@ namespace MetaBoyTipBot.Responses
         public DelegateInfo DelegateInfo { get; set; }
 
         [JsonProperty("delegate")]
-        public int Delegate { get; set; }
+        public long Delegate { get; set; }
 
         [JsonProperty("delegateHash")]
         public string DelegateHash { get; set; }
