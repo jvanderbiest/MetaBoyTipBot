@@ -3,6 +3,7 @@ using MetaBoyTipBot.Configuration;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.Services;
 using MetaBoyTipBot.Services.Conversation;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
@@ -27,10 +28,11 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             var topUpServiceMock = new Mock<ITopUpService>();
             var withdrawalServiceMock = new Mock<IWithdrawalService>();
             var settingsServiceMock = new Mock<ISettingsService>();
+            var loggerMessageServiceMock = new Mock<ILogger<IMessageService>>();
 
             serviceProviderMock.Setup(x => x.GetService(typeof(CallbackMessageService))).Returns(new CallbackMessageService(balanceServiceMock.Object, topUpServiceMock.Object, withdrawalServiceMock.Object, settingsServiceMock.Object));
             serviceProviderMock.Setup(x => x.GetService(typeof(PrivateMessageService))).Returns(new PrivateMessageService(botConfigurationMock.Object, botServiceMock.Object, walletUserRepositoryMock.Object, withdrawalServiceMock.Object, settingsServiceMock.Object));
-            serviceProviderMock.Setup(x => x.GetService(typeof(GroupMessageService))).Returns(new GroupMessageService(botServiceMock.Object, tipServiceMock.Object));
+            serviceProviderMock.Setup(x => x.GetService(typeof(GroupMessageService))).Returns(new GroupMessageService(loggerMessageServiceMock.Object, botServiceMock.Object, tipServiceMock.Object));
             _sut = new MessageFactory(serviceProviderMock.Object);
         }
 

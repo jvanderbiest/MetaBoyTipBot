@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
+using Castle.Core.Logging;
 using MetaBoyTipBot.Services;
 using MetaBoyTipBot.Services.Conversation;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Telegram.Bot.Types;
@@ -17,12 +19,13 @@ namespace MetaBoyTipBot.Tests.Unit.Services
         [SetUp]
         public void BeforeEachTest()
         {
+            var loggerMock = new Mock<ILogger<IMessageService>>();
             _botServiceMock = new Mock<IBotService>();
 
             _tipServiceMock = new Mock<ITipService>();
             _tipServiceMock.Setup(x => x.TryTip(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(10);
 
-            _sut = new GroupMessageService(_botServiceMock.Object, _tipServiceMock.Object);
+            _sut = new GroupMessageService(loggerMock.Object, _botServiceMock.Object, _tipServiceMock.Object);
         }
 
         [Test]

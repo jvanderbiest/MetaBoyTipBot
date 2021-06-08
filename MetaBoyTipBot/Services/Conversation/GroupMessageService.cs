@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using MetaBoyTipBot.Extensions;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -8,11 +9,13 @@ namespace MetaBoyTipBot.Services.Conversation
 {
     public class GroupMessageService : IMessageService
     {
+        private readonly ILogger<IMessageService> _logger;
         private readonly IBotService _botService;
         private readonly ITipService _tipService;
 
-        public GroupMessageService(IBotService botService, ITipService tipService)
+        public GroupMessageService(ILogger<IMessageService> logger, IBotService botService, ITipService tipService)
         {
+            _logger = logger;
             _botService = botService ?? throw new ArgumentNullException(nameof(botService));
             _tipService = tipService ?? throw new ArgumentNullException(nameof(tipService));
         }
@@ -23,6 +26,8 @@ namespace MetaBoyTipBot.Services.Conversation
 
             if (isReplyToMessage)
             {
+                _logger.LogInformation($"Reply message in chat {update.Message.Chat.Title}");
+
                 var isReplyToBot = update.Message.ReplyToMessage?.From?.IsBot;
                 var hasUserId = update.Message.From?.Id > 0;
                 var isMessageFromBot = update.Message?.From?.IsBot;
