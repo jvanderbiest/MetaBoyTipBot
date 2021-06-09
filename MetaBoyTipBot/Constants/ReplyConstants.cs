@@ -17,6 +17,7 @@
         public const string WithdrawVerificationLonger = "It's taking longer than expected, just a few more moments...";
         public const string WalletAddressInUse = "The wallet address is already registered for another user";
         public const string InvalidAmount = "We provided amount is invalid";
+        public const string InsufficientBalance = "We are sorry but your balance of {0} MHC does not allow the witdrawal amount of {1} MHC.";
         public const string Balance = "Your balance is *{0} MHC*";
         public const string TopUp = "We topped up your account with *{0} MHC*, happy tipping!";
     }
