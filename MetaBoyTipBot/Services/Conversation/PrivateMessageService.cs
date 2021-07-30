@@ -6,6 +6,7 @@ using MetaBoyTipBot.Constants;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.TableEntities;
 using Microsoft.Extensions.Options;
+using Telegram.Bot.Requests;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -122,34 +123,46 @@ namespace MetaBoyTipBot.Services.Conversation
             }
         }
 
-        private async Task<WalletAddressAction> TrySetWallet(string walletValue, Update update)
+        private async Task<WalletAddressAction> TrySetWallet(string newWallet, Update update)
         {
-            if (!string.IsNullOrEmpty(walletValue))
+            if (!string.IsNullOrEmpty(newWallet))
             {
                 var userId = update.Message.From.Id;
-                var existingWalletUser = _walletUserRepository.GetByWalletId(walletValue);
-                if (existingWalletUser != null)
-                {
-                    var isOwnWallet = existingWalletUser.GetUserId() == userId;
-                    if (isOwnWallet)
-                    {
-                        await _walletUserRepository.Delete(new WalletUser(walletValue, userId));
-                        await AddUserWallet(update, walletValue, userId, update.Message.Chat.Id);
-                        return WalletAddressAction.WalletSet;
-                    }
 
-                    return WalletAddressAction.Duplicate;
+                var isUniqueWallet = _walletUserRepository.GetByWalletId(newWallet) == null;
+                if (isUniqueWallet)
+                {
+                    await DeleteWalletsIfExists(userId);
+
+                    await AddUserWallet(update, newWallet, userId, update.Message.Chat.Id);
+                    return WalletAddressAction.WalletSet;
                 }
 
-                await AddUserWallet(update, walletValue, userId, update.Message.Chat.Id);
-                return WalletAddressAction.WalletSet;
+                return WalletAddressAction.Duplicate;
             }
 
             return WalletAddressAction.None;
         }
 
+        /// <summary>
+        /// To cleanup for users who had multiple wallets set because of a previous issue.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        private async Task DeleteWalletsIfExists(int userId)
+        {
+            var userWallets = _walletUserRepository.GetByUserIdDuplicates(userId);
+
+            foreach (var userWallet in userWallets)
+            {
+                await _walletUserRepository.Delete(userWallet);
+            }
+        }
+
         private string ValidateWallet(string messageText)
         {
+            // remove whitespaces
+            messageText = Regex.Replace(messageText, @"\s+", "");
             var match = Regex.Match(messageText, "0[xX][0-9a-fA-F]+");
 
             if (!match.Success)

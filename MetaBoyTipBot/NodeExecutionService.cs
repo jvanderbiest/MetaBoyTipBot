@@ -45,7 +45,7 @@ namespace MetaBoyTipBot
             var mhcHashAmount = (amount * 1000000).ToString(CultureInfo.InvariantCulture);
             var text = "MetaBoyTipBot withdrawal";
             Result result = await _nodeJsService.InvokeFromFileAsync<Result>(MainNodeFilePath, "sendTx", new object[] { privateKey, toAddress, mhcHashAmount, text });
-            _logger.LogInformation($"Withdraw to {toAddress} for amount {amount} ({mhcHashAmount} hash): ", result.Json);
+            _logger.LogInformation($"Withdraw to {toAddress} for amount {amount} ({mhcHashAmount} hash): {result.Json}");
             return result.TransactionId;
         }
     }

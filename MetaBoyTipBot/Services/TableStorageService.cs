@@ -39,6 +39,7 @@ namespace MetaBoyTipBot.Services
             try
             {
                 var cloudTable = GetCloudTable(tableName);
+                entity.ETag = "*";
                 TableOperation deleteOperation = TableOperation.Delete(entity);
                 await cloudTable.ExecuteAsync(deleteOperation);
             }

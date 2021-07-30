@@ -22,16 +22,10 @@ namespace MetaBoyTipBot.Repositories
         {
             await _tableStorageService.InsertOrMergeEntity(TableName, transaction);
         }
-        
-        public UserWithdrawal GetByWalletId(string walletId)
-        {
-            var userWithdrawals = _tableStorageService.RetrieveByPartitionKey<UserWithdrawal>(TableName, walletId);
-            return userWithdrawals?.FirstOrDefault();
-        }
 
         public UserWithdrawal GetByUserId(int userId)
         {
-            var userWithdrawals = _tableStorageService.RetrieveByRowKey<UserWithdrawal>(TableName, userId.ToString());
+            var userWithdrawals = _tableStorageService.RetrieveByPartitionKey<UserWithdrawal>(TableName, userId.ToString());
             return userWithdrawals?.FirstOrDefault();
         }
     }
@@ -39,7 +33,6 @@ namespace MetaBoyTipBot.Repositories
     public interface IWithdrawalRepository
     {
         Task AddOrUpdate(UserWithdrawal transaction);
-        UserWithdrawal GetByWalletId(string walletId);
         UserWithdrawal GetByUserId(int userId);
     }
 }

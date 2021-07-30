@@ -5,14 +5,17 @@ namespace MetaBoyTipBot.TableEntities
 {
     public enum WithdrawalState
     {
-        Created,
-        Verification,
-        Completed,
-        Failed
+        None = 0,
+        Created = 1,
+        Verification = 2,
+        Completed = 3,
+        Failed = 4
     }
 
     public class UserWithdrawal : TableEntity
     {
+        private int _state;
+
         public UserWithdrawal()
         {
 
@@ -26,7 +29,19 @@ namespace MetaBoyTipBot.TableEntities
 
         public string WalletAddress { get; set; }
         public double Amount { get; set; }
-        public WithdrawalState State { get; set; }
+
+        public int StateInt
+        {
+            get => _state;
+            set => _state = value;
+        }
+
+        public WithdrawalState State
+        {
+            get => (WithdrawalState)_state;
+            set => StateInt = (int)value;
+        }
+
         public string TxId { get; set; }
         public DateTime StartDate { get; set; }
     }

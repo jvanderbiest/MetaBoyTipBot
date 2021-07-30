@@ -133,6 +133,26 @@ namespace MetaBoyTipBot.Tests.Integration
             Assert.AreEqual(rowKey2.ToString(), secondRecord.First().RowKey);
         }
 
+        [Test]
+        public async Task ShouldSetEnumStatus()
+        {
+            var tableName = "integration";
+            await _sut.DeleteTableAsync(tableName);
+            await _sut.CreateTableAsync(tableName);
+            var userId = 123;
+
+            var rowKey = (DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks).ToString();
+
+            var userWithDrawalEntity = await _sut.Retrieve<UserWithdrawal>(tableName, userId.ToString(), rowKey);
+            Assert.IsNull(userWithDrawalEntity);
+
+            userWithDrawalEntity = new UserWithdrawal(userId) { RowKey = rowKey, State = WithdrawalState.Failed, StartDate = DateTime.UtcNow, Timestamp = DateTimeOffset.UtcNow };
+            await _sut.InsertOrMergeEntity(tableName, userWithDrawalEntity);
+
+            var userWithdrawal = await _sut.Retrieve<UserWithdrawal>(tableName, userId.ToString(), rowKey);
+            Assert.IsNotNull(userWithdrawal);
+            Assert.AreEqual(userWithdrawal.State, userWithDrawalEntity.State);
+        }
 
         [Test]
         public async Task ShouldCreateAndRetrieveTableRecord()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MetaBoyTipBot.Constants;
@@ -39,6 +40,12 @@ namespace MetaBoyTipBot.Repositories
             var walletUsers = _tableStorageService.RetrieveByRowKey<WalletUser>(TableName, userId.ToString());
             return walletUsers?.FirstOrDefault();
         }
+
+        public IEnumerable<WalletUser> GetByUserIdDuplicates(int userId)
+        {
+            var walletUsers = _tableStorageService.RetrieveByRowKey<WalletUser>(TableName, userId.ToString());
+            return walletUsers;
+        }
     }
 
     public interface IWalletUserRepository
@@ -47,5 +54,6 @@ namespace MetaBoyTipBot.Repositories
         WalletUser GetByWalletId(string walletId);
         Task Delete(WalletUser transaction);
         WalletUser GetByUserId(int userId);
+        IEnumerable<WalletUser> GetByUserIdDuplicates(int userId);
     }
 }

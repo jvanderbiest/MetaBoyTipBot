@@ -42,11 +42,12 @@ namespace MetaBoyTipBot.Services
 
         public async Task Handle(Chat chat, int chatUserId, double amount)
         {
+
             var walletUser = GetWallet(chatUserId);
             var userBalance = await _userBalanceRepository.Get(chatUserId);
             if (userBalance.Balance < amount)
             {
-                await _botService.SendTextMessage(chat.Id, 
+                await _botService.SendTextMessage(chat.Id,
                     string.Format(ReplyConstants.InsufficientBalance, userBalance.Balance.RoundMetahashHash(), amount.RoundMetahashHash()));
             }
             else
@@ -57,48 +58,64 @@ namespace MetaBoyTipBot.Services
 
                     try
                     {
-                        var userWithdrawal = new UserWithdrawal(chatUserId) { WalletAddress = walletAddress, Amount = amount, State = WithdrawalState.Created, StartDate = DateTime.UtcNow };
-                        await _withdrawalRepository.AddOrUpdate(userWithdrawal);
-                        var transactionId = await _nodeExecutionService.Withdraw(walletAddress, amount);
+                        // get previous withdrawals and see if they completed. We do this in case the network sends a failed transaction and would still complete after 10 minutes.
+                        var lastWithdrawal = _withdrawalRepository.GetByUserId(walletUser.GetUserId().GetValueOrDefault());
 
-                        if (!string.IsNullOrEmpty(transactionId))
+                        if (lastWithdrawal != null && lastWithdrawal.StartDate > DateTime.UtcNow.AddMinutes(-15) && lastWithdrawal.State != WithdrawalState.Completed)
                         {
-                            userWithdrawal.TxId = transactionId;
-                            userWithdrawal.State = WithdrawalState.Verification;
-                            await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                            _logger.LogInformation($"Retrying to verify Tx {lastWithdrawal.TxId}");
+                            var isSuccess = await VerifyTx(lastWithdrawal.TxId, lastWithdrawal);
 
-                            await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawVerification);
-
-                            // make sure network is up to date
-                            System.Threading.Thread.Sleep(5000);
-
-                            if (!await VerifyTx(transactionId, userWithdrawal))
-                            {
-                                await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawVerificationLonger);
-
-                                // make sure network is up to date
-                                System.Threading.Thread.Sleep(10000);
-
-                                if (!await VerifyTx(transactionId, userWithdrawal))
-                                {
-                                    userWithdrawal.State = WithdrawalState.Failed;
-                                    await _withdrawalRepository.AddOrUpdate(userWithdrawal);
-                                    await _botService.SendTextMessage(chat.Id, ReplyConstants.UnableToWithdraw);
-                                }
-                                else
-                                {
-                                    await SetWithdrawalSuccess(userWithdrawal, chat.Id, chatUserId, amount, transactionId);
-                                }
-                            }
-                            else
-                            {
-                                await SetWithdrawalSuccess(userWithdrawal, chat.Id, chatUserId, amount, transactionId);
-                            }
+                            _logger.LogInformation($"Verify Tx {lastWithdrawal.TxId} result is {isSuccess}");
+                            await SetWithdrawalState(isSuccess, lastWithdrawal, chat.Id, chatUserId, amount, lastWithdrawal.TxId);
                         }
                         else
                         {
-                            userWithdrawal.State = WithdrawalState.Failed;
-                            await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                            if (lastWithdrawal != null && lastWithdrawal.StartDate > DateTime.UtcNow.AddHours(-4))
+                            {
+                                _logger.LogInformation($"Withdrawal denied for user {chatUserId}. Only 1 withdrawal is allowed every 4h.");
+
+                                await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawLimit);
+                            }
+                            else
+                            {
+
+                                var userWithdrawal = new UserWithdrawal(chatUserId) { WalletAddress = walletAddress, Amount = amount, State = WithdrawalState.Created, StartDate = DateTime.UtcNow };
+                                await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                                var transactionId = await _nodeExecutionService.Withdraw(walletAddress, amount);
+
+                                if (!string.IsNullOrEmpty(transactionId))
+                                {
+                                    userWithdrawal.TxId = transactionId;
+                                    userWithdrawal.State = WithdrawalState.Verification;
+                                    await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+
+                                    await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawVerification);
+
+                                    // make sure network is up to date
+                                    System.Threading.Thread.Sleep(5000);
+
+                                    if (!await VerifyTx(transactionId, userWithdrawal))
+                                    {
+                                        await _botService.SendTextMessage(chat.Id, ReplyConstants.WithdrawVerificationLonger);
+
+                                        // make sure network is up to date
+                                        System.Threading.Thread.Sleep(20000);
+
+                                        var isSuccess = await VerifyTx(transactionId, userWithdrawal);
+                                        await SetWithdrawalState(isSuccess, userWithdrawal, chat.Id, chatUserId, amount, transactionId);
+                                    }
+                                    else
+                                    {
+                                        await SetWithdrawalSuccess(userWithdrawal, chat.Id, chatUserId, amount, transactionId);
+                                    }
+                                }
+                                else
+                                {
+                                    userWithdrawal.State = WithdrawalState.Failed;
+                                    await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                                }
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -110,6 +127,20 @@ namespace MetaBoyTipBot.Services
                         await _botService.SendTextMessage(chat.Id, ReplyConstants.UnableToWithdraw);
                     }
                 }
+            }
+        }
+
+        private async Task SetWithdrawalState(bool isSuccess, UserWithdrawal userWithdrawal, long chatId, int chatUserId, double amount, string transactionId)
+        {
+            if (!isSuccess)
+            {
+                userWithdrawal.State = WithdrawalState.Failed;
+                await _withdrawalRepository.AddOrUpdate(userWithdrawal);
+                await _botService.SendTextMessage(chatId, ReplyConstants.UnableToWithdraw);
+            }
+            else
+            {
+                await SetWithdrawalSuccess(userWithdrawal, chatId, chatUserId, amount, transactionId);
             }
         }
 
