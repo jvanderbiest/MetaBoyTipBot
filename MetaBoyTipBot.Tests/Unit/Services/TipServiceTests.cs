@@ -22,7 +22,7 @@ namespace MetaBoyTipBot.Tests.Unit.Services
             _userBalanceHistoryRepository = new Mock<IUserBalanceHistoryRepository>();
             _userBalanceHistoryRepository = new Mock<IUserBalanceHistoryRepository>();
             _withdrawalRepositoryMock = new Mock<IWithdrawalRepository>();
-            _sut = new TipService(null, _userBalanceRepository.Object, _userBalanceHistoryRepository.Object, _withdrawalRepositoryMock.Object);
+            _sut = new TipService(_userBalanceRepository.Object, _userBalanceHistoryRepository.Object, _withdrawalRepositoryMock.Object);
         }
 
         /// <summary>

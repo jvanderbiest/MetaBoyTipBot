@@ -5,20 +5,17 @@ using System.Threading.Tasks;
 using MetaBoyTipBot.Extensions;
 using MetaBoyTipBot.Repositories;
 using MetaBoyTipBot.TableEntities;
-using Microsoft.Extensions.Logging;
 
 namespace MetaBoyTipBot.Services
 {
     public class TipService : ITipService
     {
-        private readonly ILogger<ITipService> _logger;
         private readonly IUserBalanceRepository _userBalanceRepository;
         private readonly IUserBalanceHistoryRepository _userBalanceHistoryRepository;
         private readonly IWithdrawalRepository _withdrawalRepository;
 
-        public TipService(ILogger<ITipService> logger, IUserBalanceRepository userBalanceRepository, IUserBalanceHistoryRepository userBalanceHistoryRepository, IWithdrawalRepository withdrawalRepository)
+        public TipService(IUserBalanceRepository userBalanceRepository, IUserBalanceHistoryRepository userBalanceHistoryRepository, IWithdrawalRepository withdrawalRepository)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userBalanceRepository = userBalanceRepository ?? throw new ArgumentNullException(nameof(userBalanceRepository));
             _userBalanceHistoryRepository = userBalanceHistoryRepository ?? throw new ArgumentNullException(nameof(userBalanceHistoryRepository));
             _withdrawalRepository = withdrawalRepository ?? throw new ArgumentNullException(nameof(withdrawalRepository));

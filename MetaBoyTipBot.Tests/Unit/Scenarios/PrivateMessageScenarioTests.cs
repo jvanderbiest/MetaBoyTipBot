@@ -122,7 +122,7 @@ namespace MetaBoyTipBot.Tests.Unit.Scenarios
         /// When the user is prompted to set their wallet he should be able to replace his existing wallet
         /// </summary>
         [Test]
-        public async Task ShouldSendReplacedMessageOnReplaceTopUpWallet()
+        public async Task ShouldSendDuplicateMessageOnReplaceTopUpWallet()
         {
             var existingWalletUser = 456;
             _botConfigurationMock.TipWalletAddress = "0x006e9cda31edf1907d494d2a0c8050e9daace7c880258785b1";
@@ -143,6 +143,39 @@ namespace MetaBoyTipBot.Tests.Unit.Scenarios
             };
 
             _walletUserRepositoryMock.Setup(x => x.GetByWalletId(update.Message.Text)).Returns(new WalletUser(update.Message.Text, existingWalletUser));
+
+            await _sut.Handle(update);
+
+            _botServiceMock.Verify(x => x.SendTextMessage(update.Message.Chat.Id, ReplyConstants.WalletAddressInUse, null), Times.Once);
+            _botServiceMock.VerifyNoOtherCalls();
+        }
+
+
+        /// <summary>
+        /// When the user is prompted to set their wallet he should be able to replace his existing wallet
+        /// </summary>
+        [Test]
+        public async Task ShouldSendReplacedMessageOnReplaceTopUpWallet()
+        {
+            var existingWalletUser = 456;
+            _botConfigurationMock.TipWalletAddress = "0x006e9cda31edf1907d494d2a0c8050e9daace7c880258785b1";
+
+            var update = new Update
+            {
+                Message = new Message
+                {
+                    From = new User { Id = existingWalletUser },
+                    MessageId = 123456,
+                    Text = "0x007c05fb709c27b08d47d05f07c745901c00d9afce047f9050",
+                    Chat = new Chat { Id = 13556 },
+                    ReplyToMessage = new Message
+                    {
+                        Text = ReplyConstants.EnterTopUpMetahashWallet
+                    }
+                }
+            };
+
+            _walletUserRepositoryMock.Setup(x => x.GetByWalletId(update.Message.Text)).Returns((WalletUser) null);
 
             await _sut.Handle(update);
 
