@@ -84,7 +84,7 @@ namespace MetaBoyTipBot.Responses
         public bool IsDelegate { get; set; }
 
         [JsonProperty("delegate")]
-        public int Delegate { get; set; }
+        public long Delegate { get; set; }
 
         [JsonProperty("delegateHash")]
         public string DelegateHash { get; set; }
